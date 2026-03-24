@@ -55,6 +55,9 @@ class _ImportExistingProfileSheet extends StatelessWidget {
   final VoidCallback? onImported;
 
   Future<void> _handleFileImport(BuildContext context) async {
+    final importViewModel = context.read<ImportExistingProfileViewModel>();
+    final preferencesController = context.read<AppPreferencesController>();
+
     final pickerResult = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: const ['db'],
@@ -65,9 +68,7 @@ class _ImportExistingProfileSheet extends StatelessWidget {
       return;
     }
 
-    final result = await context
-        .read<ImportExistingProfileViewModel>()
-        .importFromFile(path);
+    final result = await importViewModel.importFromFile(path);
     if (!context.mounted) {
       return;
     }
@@ -79,7 +80,7 @@ class _ImportExistingProfileSheet extends StatelessWidget {
       return;
     }
 
-    await context.read<AppPreferencesController>().reload();
+    await preferencesController.reload();
     if (!context.mounted) {
       return;
     }
@@ -101,7 +102,7 @@ class _ImportExistingProfileSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewModel = context.watch<ImportExistingProfileViewModel>();
     return Material(
-      color: AppColors.backgroundAlt,
+      color: AppColors.background,
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       clipBehavior: Clip.antiAlias,
       child: SizedBox(
@@ -141,7 +142,7 @@ class _ImportExistingProfileSheet extends StatelessWidget {
                 height: 209,
                 iconAssetPath: AppAssets.importIcon,
                 title: 'Import from file',
-                description: 'Select a local Subscription Tracker backup file.',
+                description: 'Select export file from device',
                 isBusy: viewModel.isBusy,
                 onTap: viewModel.isBusy
                     ? null
@@ -153,7 +154,7 @@ class _ImportExistingProfileSheet extends StatelessWidget {
                 iconAssetPath: AppAssets.scanQrIcon,
                 title: 'Scan QR',
                 description:
-                    'Use local device-to-device transfer when QR migration is available.',
+                    'Go to setting on old device and select migrate with QR',
                 descriptionWidth: 230,
                 isBusy: false,
                 onTap: () => _showNotReadyMessage(

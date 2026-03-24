@@ -11,6 +11,7 @@ import '../../../../core/utils/formatters.dart';
 import '../../domain/models/subscription.dart';
 import '../viewmodels/subscriptions_view_model.dart';
 import '../widgets/subscription_feature_widgets.dart';
+import '../widgets/subscription_primary_navigation.dart';
 
 class SubscriptionsScreen extends StatefulWidget {
   const SubscriptionsScreen({super.key});
@@ -32,9 +33,11 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
     final didCreate = await context.push<bool>(AppRoutes.newSubscription);
     if (didCreate == true && context.mounted) {
       await context.read<SubscriptionsViewModel>().load(
-            displayMode: context.read<SubscriptionsViewModel>().displayMode,
-            selectedCategory: context.read<SubscriptionsViewModel>().selectedCategory,
-          );
+        displayMode: context.read<SubscriptionsViewModel>().displayMode,
+        selectedCategory: context
+            .read<SubscriptionsViewModel>()
+            .selectedCategory,
+      );
     }
   }
 
@@ -46,12 +49,15 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
   Widget build(BuildContext context) {
     return Consumer<SubscriptionsViewModel>(
       builder: (context, viewModel, _) {
+        final primaryNavigation = SubscriptionPrimaryNavigationScope.of(
+          context,
+        );
         return SubscriptionShellScaffold(
           destination: SubscriptionPrimaryDestination.subscriptions,
-          onHomeTap: () => context.go(AppRoutes.home),
-          onSubscriptionsTap: () => context.go(AppRoutes.subscriptions),
-          onInsightsTap: () => context.go(AppRoutes.insights),
-          onSettingsTap: () => context.go(AppRoutes.settings),
+          onHomeTap: () => primaryNavigation.goHome(),
+          onSubscriptionsTap: () => primaryNavigation.goSubscriptions(),
+          onInsightsTap: () => primaryNavigation.goInsights(),
+          onSettingsTap: () => primaryNavigation.goSettings(),
           onAddTap: () => _openAdd(context),
           child: SafeArea(
             child: RefreshIndicator(
@@ -190,9 +196,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
 }
 
 class _CategoryGrid extends StatelessWidget {
-  const _CategoryGrid({
-    required this.viewModel,
-  });
+  const _CategoryGrid({required this.viewModel});
 
   final SubscriptionsViewModel viewModel;
 
@@ -264,19 +268,23 @@ class _CategoryListSection extends StatelessWidget {
         const SizedBox(height: 12),
         SurfaceCard(
           child: Column(
-            children: subscriptions.asMap().entries.map((entry) {
-              final index = entry.key;
-              final subscription = entry.value;
-              return Padding(
-                padding: EdgeInsets.only(
-                  bottom: index == subscriptions.length - 1 ? 0 : 8,
-                ),
-                child: SubscriptionPaymentTile(
-                  subscription: subscription,
-                  onTap: () => onTapSubscription(subscription.id),
-                ),
-              );
-            }).toList(growable: false),
+            children: subscriptions
+                .asMap()
+                .entries
+                .map((entry) {
+                  final index = entry.key;
+                  final subscription = entry.value;
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      bottom: index == subscriptions.length - 1 ? 0 : 8,
+                    ),
+                    child: SubscriptionPaymentTile(
+                      subscription: subscription,
+                      onTap: () => onTapSubscription(subscription.id),
+                    ),
+                  );
+                })
+                .toList(growable: false),
           ),
         ),
       ],

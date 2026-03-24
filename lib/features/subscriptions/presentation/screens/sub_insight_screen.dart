@@ -14,6 +14,7 @@ import '../../../settings/presentation/viewmodels/app_preferences_controller.dar
 import '../../domain/models/subscription.dart';
 import '../viewmodels/sub_insight_view_model.dart';
 import '../widgets/subscription_feature_widgets.dart';
+import '../widgets/subscription_primary_navigation.dart';
 
 class SubInsightScreen extends StatelessWidget {
   const SubInsightScreen({super.key});
@@ -29,12 +30,15 @@ class SubInsightScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<SubInsightViewModel>(
       builder: (context, viewModel, _) {
+        final primaryNavigation = SubscriptionPrimaryNavigationScope.of(
+          context,
+        );
         return SubscriptionShellScaffold(
           destination: SubscriptionPrimaryDestination.insights,
-          onHomeTap: () => context.go(AppRoutes.home),
-          onSubscriptionsTap: () => context.go(AppRoutes.subscriptions),
-          onInsightsTap: () => context.go(AppRoutes.insights),
-          onSettingsTap: () => context.go(AppRoutes.settings),
+          onHomeTap: () => primaryNavigation.goHome(),
+          onSubscriptionsTap: () => primaryNavigation.goSubscriptions(),
+          onInsightsTap: () => primaryNavigation.goInsights(),
+          onSettingsTap: () => primaryNavigation.goSettings(),
           onAddTap: () => _openAdd(context),
           child: SafeArea(
             child: RefreshIndicator(
@@ -343,7 +347,7 @@ class _TopCategoryBadge extends StatelessWidget {
           Text(
             summary.count.toString(),
             style: AppTextStyles.smallLabel.copyWith(
-              color: AppColors.textSecondary.withOpacity(0.7),
+              color: AppColors.textSecondary.withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -425,7 +429,7 @@ class _CategoryBreakdownColumn extends StatelessWidget {
                   Text(
                     summary.count.toString(),
                     style: AppTextStyles.bodyMuted.copyWith(
-                      color: AppColors.textSecondary.withOpacity(0.65),
+                      color: AppColors.textSecondary.withValues(alpha: 0.65),
                       letterSpacing: -0.14,
                     ),
                   ),

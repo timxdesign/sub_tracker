@@ -11,6 +11,9 @@ class SubscriptionDto {
     required this.nextBillingDate,
     required this.createdAt,
     this.description = '',
+    this.serviceProvider = '',
+    this.website = '',
+    this.startDate,
   });
 
   final String id;
@@ -22,6 +25,9 @@ class SubscriptionDto {
   final DateTime nextBillingDate;
   final DateTime createdAt;
   final String description;
+  final String serviceProvider;
+  final String website;
+  final DateTime? startDate;
 
   Map<String, dynamic> toJson() {
     return {
@@ -34,6 +40,9 @@ class SubscriptionDto {
       'nextBillingDate': nextBillingDate.toIso8601String(),
       'createdAt': createdAt.toIso8601String(),
       'description': description,
+      'serviceProvider': serviceProvider,
+      'website': website,
+      'startDate': startDate?.toIso8601String(),
     };
   }
 
@@ -52,6 +61,9 @@ class SubscriptionDto {
           DateTime.tryParse(json['createdAt'] as String? ?? '') ??
           DateTime.now(),
       description: json['description'] as String? ?? '',
+      serviceProvider: json['serviceProvider'] as String? ?? '',
+      website: json['website'] as String? ?? '',
+      startDate: DateTime.tryParse(json['startDate'] as String? ?? ''),
     );
   }
 
@@ -66,6 +78,9 @@ class SubscriptionDto {
       nextBillingDate: nextBillingDate,
       createdAt: createdAt,
       description: description,
+      serviceProvider: serviceProvider,
+      website: website,
+      startDate: startDate,
     );
   }
 
@@ -80,6 +95,9 @@ class SubscriptionDto {
       nextBillingDate: subscription.nextBillingDate,
       createdAt: subscription.createdAt,
       description: subscription.description,
+      serviceProvider: subscription.serviceProvider,
+      website: subscription.website,
+      startDate: subscription.startDate,
     );
   }
 

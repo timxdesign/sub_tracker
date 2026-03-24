@@ -15,6 +15,7 @@ import 'package:sub_tracker/features/subscriptions/presentation/screens/subscrip
 import 'package:sub_tracker/features/subscriptions/presentation/viewmodels/home_dashboard_view_model.dart';
 import 'package:sub_tracker/features/subscriptions/presentation/viewmodels/subscriptions_view_model.dart';
 import 'package:sub_tracker/features/subscriptions/presentation/widgets/subscription_feature_widgets.dart';
+import 'package:sub_tracker/features/subscriptions/presentation/widgets/subscription_primary_navigation.dart';
 
 void main() {
   testWidgets('home screen renders visible content', (tester) async {
@@ -190,6 +191,201 @@ void main() {
       expect(
         router.routeInformationProvider.value.uri.toString(),
         '/subscriptions/apps',
+      );
+    },
+  );
+
+  testWidgets(
+    'primary dock switches branches like tabs and preserves subscriptions state',
+    (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1280, 720);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final now = DateTime.now();
+      final subscriptionsRepository = _FakeSubscriptionsRepository([
+        Subscription(
+          id: 'netflix',
+          name: 'Netflix Premium',
+          category: SubscriptionCategory.apps,
+          price: 8000,
+          currencyCode: 'NGN',
+          billingCycle: SubscriptionBillingCycle.monthly,
+          nextBillingDate: now.add(const Duration(days: 3)),
+          createdAt: now.subtract(const Duration(days: 22)),
+        ),
+        Subscription(
+          id: 'chatgpt',
+          name: 'ChatGPT Plus',
+          category: SubscriptionCategory.tools,
+          price: 20000,
+          currencyCode: 'NGN',
+          billingCycle: SubscriptionBillingCycle.monthly,
+          nextBillingDate: now.add(const Duration(days: 10)),
+          createdAt: now.subtract(const Duration(days: 40)),
+        ),
+      ]);
+
+      final profileRepository = _FakeProfileRepository(
+        Profile(
+          fullName: 'Timothy Doe',
+          email: 'timothy@example.com',
+          createdAt: now.subtract(const Duration(days: 4)),
+        ),
+      );
+
+      final router = GoRouter(
+        initialLocation: AppRoutes.home,
+        routes: [
+          StatefulShellRoute.indexedStack(
+            builder: (context, state, navigationShell) {
+              return SubscriptionPrimaryNavigationScope(
+                navigationShell: navigationShell,
+                child: navigationShell,
+              );
+            },
+            branches: [
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(
+                    path: AppRoutes.home,
+                    builder: (context, state) {
+                      return ChangeNotifierProvider(
+                        create: (_) => HomeDashboardViewModel(
+                          getStoredProfile: GetStoredProfileUseCase(
+                            profileRepository,
+                          ),
+                          getSubscriptions: GetSubscriptionsUseCase(
+                            subscriptionsRepository,
+                          ),
+                        )..load(),
+                        child: const HomeDashboardScreen(),
+                      );
+                    },
+                  ),
+                ],
+              ),
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(
+                    path: AppRoutes.subscriptions,
+                    builder: (context, state) {
+                      final displayMode =
+                          state.uri.queryParameters['view'] == 'list'
+                          ? SubscriptionDisplayMode.list
+                          : SubscriptionDisplayMode.grid;
+                      return ChangeNotifierProvider(
+                        create: (_) =>
+                            SubscriptionsViewModel(
+                              getSubscriptions: GetSubscriptionsUseCase(
+                                subscriptionsRepository,
+                              ),
+                            )..load(
+                              displayMode: displayMode,
+                              resetSelectedCategory: true,
+                            ),
+                        child: const SubscriptionsScreen(),
+                      );
+                    },
+                    routes: [
+                      GoRoute(
+                        path: ':category',
+                        builder: (context, state) {
+                          final category = SubscriptionCategory.tryParseSlug(
+                            state.pathParameters['category'] ?? '',
+                          );
+                          return ChangeNotifierProvider(
+                            create: (_) =>
+                                SubscriptionsViewModel(
+                                  getSubscriptions: GetSubscriptionsUseCase(
+                                    subscriptionsRepository,
+                                  ),
+                                )..load(
+                                  displayMode: SubscriptionDisplayMode.list,
+                                  selectedCategory: category,
+                                  resetSelectedCategory: category == null,
+                                ),
+                            child: const SubscriptionsScreen(),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(
+                    path: AppRoutes.insights,
+                    builder: (context, state) => const SizedBox.shrink(),
+                  ),
+                ],
+              ),
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(
+                    path: AppRoutes.settings,
+                    builder: (context, state) => const SizedBox.shrink(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      await tester.tap(
+        find.byKey(const ValueKey('home-category-preview-apps')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        router.routeInformationProvider.value.uri.toString(),
+        '/subscriptions/apps',
+      );
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is SubscriptionFilterChip &&
+              widget.label == 'Apps' &&
+              widget.isSelected,
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(
+        find.byKey(const ValueKey('subscription-shell-nav-home')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(router.routeInformationProvider.value.uri.toString(), '/home');
+      expect(find.text('Hi, Timothy', skipOffstage: false), findsOneWidget);
+
+      await tester.tap(
+        find.byKey(const ValueKey('subscription-shell-nav-subscriptions')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        router.routeInformationProvider.value.uri.toString(),
+        '/subscriptions/apps',
+      );
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is SubscriptionFilterChip &&
+              widget.label == 'Apps' &&
+              widget.isSelected,
+        ),
+        findsOneWidget,
       );
     },
   );

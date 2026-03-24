@@ -22,11 +22,13 @@ abstract final class AppAssets {
   static const otherIcon = 'assets/icons/others.svg';
   static const homeNavIcon = 'assets/icons/Home_active.svg';
   static const subscriptionsNavActive = 'assets/icons/subscription_active.svg';
-  static const subscriptionsNavInactive = 'assets/icons/Subscription_inactive.svg';
+  static const subscriptionsNavInactive =
+      'assets/icons/Subscription_inactive.svg';
   static const insightsNavActive = 'assets/icons/Subinsight_active.svg';
   static const insightsNavInactive = 'assets/icons/Subinsight_inactive.svg';
   static const settingsNavActive = 'assets/icons/Settings_active.svg';
   static const settingsNavInactive = 'assets/icons/settings_inactive.svg';
+  static const checkCircleIcon = 'assets/icons/Check Circle.svg';
   static const airtelLogo = 'assets/img/logo_1.png';
   static const netflixLogo = 'assets/img/logo_2.png';
   static const openAiLogo = 'assets/img/logo_3.png';

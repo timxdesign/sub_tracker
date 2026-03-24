@@ -12,6 +12,7 @@ import '../../../settings/presentation/viewmodels/app_preferences_controller.dar
 import '../../domain/models/subscription.dart';
 import '../viewmodels/home_dashboard_view_model.dart';
 import '../widgets/subscription_feature_widgets.dart';
+import '../widgets/subscription_primary_navigation.dart';
 
 class HomeDashboardScreen extends StatelessWidget {
   const HomeDashboardScreen({super.key});
@@ -35,12 +36,15 @@ class HomeDashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<HomeDashboardViewModel>(
       builder: (context, viewModel, _) {
+        final primaryNavigation = SubscriptionPrimaryNavigationScope.of(
+          context,
+        );
         return SubscriptionShellScaffold(
           destination: SubscriptionPrimaryDestination.home,
-          onHomeTap: () => context.go(AppRoutes.home),
-          onSubscriptionsTap: () => context.go(AppRoutes.subscriptions),
-          onInsightsTap: () => context.go(AppRoutes.insights),
-          onSettingsTap: () => context.go(AppRoutes.settings),
+          onHomeTap: () => primaryNavigation.goHome(),
+          onSubscriptionsTap: () => primaryNavigation.goSubscriptions(),
+          onInsightsTap: () => primaryNavigation.goInsights(),
+          onSettingsTap: () => primaryNavigation.goSettings(),
           onAddTap: () => _openAdd(context),
           child: SafeArea(
             child: RefreshIndicator(
@@ -57,6 +61,7 @@ class HomeDashboardScreen extends StatelessWidget {
     final categoryPreview = viewModel.categoryPreview;
     final currencyCode =
         context.watch<AppPreferencesController?>()?.currencyCode ?? 'NGN';
+    final primaryNavigation = SubscriptionPrimaryNavigationScope.of(context);
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -165,7 +170,7 @@ class HomeDashboardScreen extends StatelessWidget {
         SectionHeader(
           title: 'Subscriptions',
           actionLabel: 'View all',
-          onTap: () => context.go(AppRoutes.subscriptions),
+          onTap: () => primaryNavigation.goSubscriptions(reset: true),
         ),
         const SizedBox(height: 14),
         Row(

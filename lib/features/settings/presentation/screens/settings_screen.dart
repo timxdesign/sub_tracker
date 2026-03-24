@@ -7,6 +7,8 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../profile/domain/models/profile.dart';
 import '../../../subscriptions/presentation/widgets/subscription_feature_widgets.dart';
+import '../../../subscriptions/presentation/widgets/subscription_primary_navigation.dart';
+import '../../domain/models/app_preferences.dart';
 import '../viewmodels/app_preferences_controller.dart';
 import '../viewmodels/settings_view_model.dart';
 import '../widgets/import_existing_profile_sheet.dart';
@@ -76,12 +78,15 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer2<SettingsViewModel, AppPreferencesController>(
       builder: (context, viewModel, preferences, _) {
+        final primaryNavigation = SubscriptionPrimaryNavigationScope.of(
+          context,
+        );
         return SubscriptionShellScaffold(
           destination: SubscriptionPrimaryDestination.settings,
-          onHomeTap: () => context.go(AppRoutes.home),
-          onSubscriptionsTap: () => context.go(AppRoutes.subscriptions),
-          onInsightsTap: () => context.go(AppRoutes.insights),
-          onSettingsTap: () => context.go(AppRoutes.settings),
+          onHomeTap: () => primaryNavigation.goHome(),
+          onSubscriptionsTap: () => primaryNavigation.goSubscriptions(),
+          onInsightsTap: () => primaryNavigation.goInsights(),
+          onSettingsTap: () => primaryNavigation.goSettings(),
           onAddTap: () => _openAdd(context),
           child: SafeArea(
             child: Stack(
@@ -90,10 +95,10 @@ class SettingsScreen extends StatelessWidget {
                   onRefresh: viewModel.load,
                   child: ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 120),
+                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 140),
                     children: [
                       Text('Settings', style: AppTextStyles.sheetTitle),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 31),
                       if (viewModel.errorMessage != null)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 16),
@@ -102,62 +107,79 @@ class SettingsScreen extends StatelessWidget {
                             style: AppTextStyles.bodyMuted,
                           ),
                         ),
-                      _ProfileCard(profile: viewModel.profile),
+                      _ProfileSummaryCard(
+                        profile: viewModel.profile,
+                        onEdit: () => _openEditProfile(context),
+                      ),
                       const SizedBox(height: 16),
-                      _SettingsGroup(
-                        children: [
-                          _SettingsTile(
-                            icon: Icons.edit_outlined,
-                            label: 'Edit Profile',
-                            onTap: () => _openEditProfile(context),
-                          ),
-                          _SettingsTile(
-                            icon: Icons.coffee_outlined,
-                            label: 'Buy me coffee',
-                            onTap: () => _showOfflineLinkNotice(
-                              context,
-                              'Buy me coffee',
-                            ),
-                          ),
-                          _SettingsTile(
-                            icon: Icons.attach_money_rounded,
+                      _CenteredActionCard(
+                        label: 'Buy me coffee',
+                        icon: Icons.coffee_outlined,
+                        iconColor: const Color(0xFFA14F28),
+                        onTap: () =>
+                            _showOfflineLinkNotice(context, 'Buy me coffee'),
+                      ),
+                      const SizedBox(height: 16),
+                      const _SectionLabel(label: 'Preference'),
+                      const SizedBox(height: 12),
+                      _SettingsSectionCard(
+                        rows: [
+                          _SettingsRow(
                             label: 'Currency',
-                            value: preferences.currencyCode,
+                            valueLabel: _currencyLabel(
+                              preferences.currencyCode,
+                            ),
                             onTap: () =>
                                 showChooseCurrencySheet(context, preferences),
                           ),
-                          _SettingsTile(
-                            icon: Icons.dark_mode_outlined,
+                          _SettingsRow(
                             label: 'Theme',
-                            value: preferences.themePreference.label,
+                            valueLabel: _themeLabel(
+                              preferences.themePreference,
+                            ),
                             onTap: () =>
                                 showThemeModeSheet(context, preferences),
                           ),
-                          _SettingsTile(
-                            icon: Icons.fingerprint_rounded,
-                            label: 'Biometrics',
-                            value: preferences.biometricsEnabled
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const _SectionLabel(label: 'Date & Security'),
+                      const SizedBox(height: 12),
+                      _SettingsSectionCard(
+                        rows: [
+                          _SettingsRow(
+                            label: 'Enable Biometrics',
+                            valueLabel: preferences.biometricsEnabled
                                 ? 'Active'
                                 : 'Inactive',
-                          ),
-                          _SettingsTile(
-                            icon: Icons.phone_android_rounded,
-                            label: 'Transfer to new device',
-                            subtitle:
-                                'Import from file or start local migration',
-                            onTap: () => showImportExistingProfileSheet(
+                            onTap: () => _showOfflineLinkNotice(
                               context,
-                              onImported: () => context.go(AppRoutes.home),
+                              'Biometrics settings',
                             ),
                           ),
-                          _SettingsTile(
-                            icon: Icons.description_outlined,
+                          _SettingsRow(
+                            label: 'Transfer to new device',
+                            valueLabel: 'Migrate',
+                            onTap: () => showImportExistingProfileSheet(
+                              context,
+                              onImported: () => primaryNavigation.goHome(),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const _SectionLabel(label: 'Legal'),
+                      const SizedBox(height: 12),
+                      _SettingsSectionCard(
+                        rows: [
+                          _SettingsRow(
                             label: 'Terms & Condition',
+                            valueLabel: 'Visit',
                             onTap: () => context.push(AppRoutes.terms),
                           ),
-                          _SettingsTile(
-                            icon: Icons.language_outlined,
+                          _SettingsRow(
                             label: 'Creator\'s Website',
+                            valueLabel: 'Visit',
                             onTap: () => _showOfflineLinkNotice(
                               context,
                               'Creator\'s Website',
@@ -166,47 +188,37 @@ class SettingsScreen extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      SurfaceCard(
-                        radius: 24,
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Subscription Tracker',
-                              style: AppTextStyles.body.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            const Text(
-                              'Published by BrandsCode | v1.0.0',
-                              style: AppTextStyles.bodyMuted,
-                            ),
-                          ],
-                        ),
+                      const _SectionLabel(label: 'App'),
+                      const SizedBox(height: 12),
+                      const _SettingsSectionCard(
+                        rows: [
+                          _SettingsRow(
+                            label: 'Version',
+                            valueLabel: 'v1.0',
+                            showChevron: false,
+                            pillBackgroundColor: AppColors.background,
+                          ),
+                          _SettingsRow(
+                            label: 'Publish by',
+                            valueLabel: 'TimX Design Studio',
+                            showChevron: false,
+                            pillBackgroundColor: AppColors.background,
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 16),
-                      SurfaceCard(
-                        radius: 24,
-                        padding: EdgeInsets.zero,
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 4,
+                      const SizedBox(height: 32),
+                      Center(
+                        child: TextButton(
+                          onPressed: () =>
+                              _handleDeleteProfile(context, viewModel),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.error,
+                            padding: EdgeInsets.zero,
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            textStyle: AppTextStyles.bodyMuted,
                           ),
-                          leading: const Icon(
-                            Icons.delete_outline_rounded,
-                            color: AppColors.error,
-                          ),
-                          title: Text(
-                            'Delete profile',
-                            style: AppTextStyles.body.copyWith(
-                              color: AppColors.error,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          onTap: () => _handleDeleteProfile(context, viewModel),
+                          child: const Text('Delete profile'),
                         ),
                       ),
                     ],
@@ -244,10 +256,11 @@ class SettingsScreen extends StatelessWidget {
   }
 }
 
-class _ProfileCard extends StatelessWidget {
-  const _ProfileCard({required this.profile});
+class _ProfileSummaryCard extends StatelessWidget {
+  const _ProfileSummaryCard({required this.profile, required this.onEdit});
 
   final Profile? profile;
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -263,70 +276,156 @@ class _ProfileCard extends StatelessWidget {
               .join();
 
     return SurfaceCard(
-      radius: 24,
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: const BoxDecoration(
-              color: AppColors.brandSoft,
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              initials,
-              style: AppTextStyles.sectionTitle.copyWith(
-                color: AppColors.brandGreen,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  fullName,
-                  style: AppTextStyles.body.copyWith(
-                    fontWeight: FontWeight.w500,
+      radius: 16,
+      padding: EdgeInsets.zero,
+      child: SizedBox(
+        height: 188,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 31,
+                height: 31,
+                decoration: const BoxDecoration(
+                  color: AppColors.brandSoft,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  initials,
+                  style: AppTextStyles.smallLabel.copyWith(
+                    color: AppColors.brandGreen,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(email, style: AppTextStyles.bodyMuted),
-              ],
-            ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                fullName,
+                style: AppTextStyles.sectionTitle.copyWith(
+                  fontSize: 20,
+                  height: 28 / 20,
+                  letterSpacing: -1,
+                ),
+              ),
+              Text(email, style: AppTextStyles.bodyMuted),
+              const SizedBox(height: 10),
+              InkWell(
+                onTap: onEdit,
+                borderRadius: BorderRadius.circular(999),
+                child: Ink(
+                  width: 134,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceMuted,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Edit Profile',
+                      style: AppTextStyles.body.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textSecondary,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _SettingsGroup extends StatelessWidget {
-  const _SettingsGroup({required this.children});
+class _CenteredActionCard extends StatelessWidget {
+  const _CenteredActionCard({
+    required this.label,
+    required this.icon,
+    required this.iconColor,
+    required this.onTap,
+  });
 
-  final List<Widget> children;
+  final String label;
+  final IconData icon;
+  final Color iconColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Ink(
+        height: 54,
+        decoration: BoxDecoration(
+          color: AppColors.backgroundAlt,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: iconColor),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: AppTextStyles.bodyMuted.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: -0.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: AppTextStyles.bodyMuted.copyWith(
+        color: AppColors.textSecondary,
+        letterSpacing: 0,
+      ),
+    );
+  }
+}
+
+class _SettingsSectionCard extends StatelessWidget {
+  const _SettingsSectionCard({required this.rows});
+
+  final List<Widget> rows;
 
   @override
   Widget build(BuildContext context) {
     return SurfaceCard(
-      radius: 24,
-      padding: EdgeInsets.zero,
+      radius: 16,
+      padding: const EdgeInsets.all(16),
       child: Column(
-        children: children
+        children: rows
             .asMap()
             .entries
             .map((entry) {
               final index = entry.key;
-              final child = entry.value;
-              return Column(
-                children: [
-                  child,
-                  if (index != children.length - 1)
-                    const Divider(height: 1, color: AppColors.divider),
-                ],
+              final row = entry.value;
+              return Padding(
+                padding: EdgeInsets.only(
+                  bottom: index == rows.length - 1 ? 0 : 16,
+                ),
+                child: row,
               );
             })
             .toList(growable: false),
@@ -335,42 +434,106 @@ class _SettingsGroup extends StatelessWidget {
   }
 }
 
-class _SettingsTile extends StatelessWidget {
-  const _SettingsTile({
-    required this.icon,
+class _SettingsRow extends StatelessWidget {
+  const _SettingsRow({
     required this.label,
-    this.value,
-    this.subtitle,
+    required this.valueLabel,
     this.onTap,
+    this.showChevron = true,
+    this.pillBackgroundColor = AppColors.surfaceMuted,
   });
 
-  final IconData icon;
   final String label;
-  final String? value;
-  final String? subtitle;
+  final String valueLabel;
   final VoidCallback? onTap;
+  final bool showChevron;
+  final Color pillBackgroundColor;
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      leading: Icon(icon, color: AppColors.textSecondary),
-      title: Text(
-        label,
-        style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w500),
-      ),
-      subtitle: subtitle == null
-          ? null
-          : Text(subtitle!, style: AppTextStyles.bodyMuted),
-      trailing: value != null
-          ? Text(value!, style: AppTextStyles.bodyMuted)
-          : onTap != null
-          ? const Icon(
+    final content = SizedBox(
+      height: 29,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: AppTextStyles.bodyMuted.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          _ValuePill(label: valueLabel, backgroundColor: pillBackgroundColor),
+          if (showChevron) ...[
+            const SizedBox(width: 4),
+            const Icon(
               Icons.chevron_right_rounded,
+              size: 22,
               color: AppColors.textTertiary,
-            )
-          : null,
-      onTap: onTap,
+            ),
+          ],
+        ],
+      ),
     );
+
+    if (onTap == null) {
+      return content;
+    }
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: content,
+    );
+  }
+}
+
+class _ValuePill extends StatelessWidget {
+  const _ValuePill({required this.label, required this.backgroundColor});
+
+  final String label;
+  final Color backgroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 29,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: AppTextStyles.bodyMuted.copyWith(color: AppColors.textSecondary),
+      ),
+    );
+  }
+}
+
+String _currencyLabel(String currencyCode) {
+  switch (currencyCode) {
+    case 'NGN':
+      return 'Naira';
+    case 'USD':
+      return 'Dollars';
+    default:
+      return currencyCode;
+  }
+}
+
+String _themeLabel(SettingsThemePreference preference) {
+  switch (preference) {
+    case SettingsThemePreference.system:
+      return 'Auto';
+    case SettingsThemePreference.light:
+      return 'Light Mode';
+    case SettingsThemePreference.dark:
+      return 'Dark mode';
   }
 }

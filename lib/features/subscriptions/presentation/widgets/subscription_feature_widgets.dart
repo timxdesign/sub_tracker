@@ -318,7 +318,7 @@ class SubscriptionAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logoAsset = _logoAssetForSubscription(subscription);
+    final logoAsset = subscriptionLogoAssetForName(subscription.name);
     return Container(
       width: 40,
       height: 40,
@@ -346,6 +346,58 @@ class SubscriptionAvatar extends StatelessWidget {
                 ),
               ),
             ),
+    );
+  }
+}
+
+class SubscriptionBrandAvatar extends StatelessWidget {
+  const SubscriptionBrandAvatar({
+    super.key,
+    required this.subscriptionName,
+    this.size = 64,
+  });
+
+  final String subscriptionName;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final logoAsset = subscriptionLogoAssetForName(subscriptionName);
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        shape: BoxShape.circle,
+      ),
+      padding: EdgeInsets.all(size / 12),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+        ),
+        alignment: Alignment.center,
+        child: logoAsset == null
+            ? Text(
+                _avatarText(subscriptionName),
+                style: AppTextStyles.body.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.brandGreen,
+                ),
+              )
+            : Padding(
+                padding: EdgeInsets.all(size / 6),
+                child: ClipOval(
+                  child: Image.asset(
+                    logoAsset,
+                    width: size / 2.4,
+                    height: size / 2.4,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+      ),
     );
   }
 }
@@ -404,6 +456,7 @@ class _BottomDock extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             _DockIcon(
+              key: const ValueKey('subscription-shell-nav-home'),
               assetPath: AppAssets.homeNavIcon,
               isSelected: destination == SubscriptionPrimaryDestination.home,
               assetColor: destination == SubscriptionPrimaryDestination.home
@@ -412,6 +465,7 @@ class _BottomDock extends StatelessWidget {
               onTap: onHomeTap,
             ),
             _DockIcon(
+              key: const ValueKey('subscription-shell-nav-subscriptions'),
               assetPath:
                   destination == SubscriptionPrimaryDestination.subscriptions
                   ? AppAssets.subscriptionsNavActive
@@ -421,6 +475,7 @@ class _BottomDock extends StatelessWidget {
               onTap: onSubscriptionsTap,
             ),
             _DockIcon(
+              key: const ValueKey('subscription-shell-nav-insights'),
               assetPath: destination == SubscriptionPrimaryDestination.insights
                   ? AppAssets.insightsNavActive
                   : AppAssets.insightsNavInactive,
@@ -429,6 +484,7 @@ class _BottomDock extends StatelessWidget {
               onTap: onInsightsTap,
             ),
             _DockIcon(
+              key: const ValueKey('subscription-shell-nav-settings'),
               assetPath: destination == SubscriptionPrimaryDestination.settings
                   ? AppAssets.settingsNavActive
                   : AppAssets.settingsNavInactive,
@@ -445,6 +501,7 @@ class _BottomDock extends StatelessWidget {
 
 class _DockIcon extends StatelessWidget {
   const _DockIcon({
+    super.key,
     required this.isSelected,
     required this.onTap,
     this.assetPath,
@@ -584,8 +641,8 @@ IconData _fallbackIconForCategory(SubscriptionCategory category) {
   }
 }
 
-String? _logoAssetForSubscription(Subscription subscription) {
-  final normalized = subscription.name.toLowerCase();
+String? subscriptionLogoAssetForName(String name) {
+  final normalized = name.toLowerCase();
   if (normalized.contains('airtel')) {
     return AppAssets.airtelLogo;
   }
