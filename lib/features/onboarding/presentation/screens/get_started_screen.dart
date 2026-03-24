@@ -11,10 +11,10 @@ import '../../../../app/theme/app_text_styles.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/widgets/app_screen.dart';
 import '../../../../core/widgets/phone_viewport.dart';
+import '../../../settings/presentation/widgets/import_existing_profile_sheet.dart';
 import '../viewmodels/get_started_view_model.dart';
 import '../widgets/animated_showcase_section.dart';
 import '../widgets/dashed_divider.dart';
-import '../widgets/import_existing_profile_sheet.dart';
 
 class GetStartedScreen extends StatelessWidget {
   const GetStartedScreen({super.key});
@@ -107,6 +107,7 @@ class GetStartedScreen extends StatelessWidget {
                           key: const Key('import-existing-profile-button'),
                           onPressed: () => showImportExistingProfileSheet(
                             context,
+                            onImported: () => context.go(AppRoutes.home),
                           ),
                           style: TextButton.styleFrom(
                             backgroundColor: AppColors.surfaceMuted,

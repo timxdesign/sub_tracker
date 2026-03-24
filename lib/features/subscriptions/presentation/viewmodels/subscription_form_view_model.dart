@@ -6,9 +6,12 @@ import '../../domain/usecases/save_subscription.dart';
 class SubscriptionFormViewModel extends ChangeNotifier {
   SubscriptionFormViewModel({
     required SaveSubscriptionUseCase saveSubscription,
-  }) : _saveSubscription = saveSubscription;
+    String defaultCurrencyCode = 'NGN',
+  }) : _saveSubscription = saveSubscription,
+       _defaultCurrencyCode = defaultCurrencyCode;
 
   final SaveSubscriptionUseCase _saveSubscription;
+  final String _defaultCurrencyCode;
 
   String _name = '';
   SubscriptionCategory? _category;
@@ -105,7 +108,7 @@ class SubscriptionFormViewModel extends ChangeNotifier {
           name: _name.trim(),
           category: _category!,
           price: amount,
-          currencyCode: 'NGN',
+          currencyCode: _defaultCurrencyCode,
           billingCycle: _billingCycle,
           nextBillingDate: _nextBillingDate,
           createdAt: DateTime.now(),

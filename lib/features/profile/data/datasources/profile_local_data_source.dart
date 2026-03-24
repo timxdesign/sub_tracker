@@ -30,6 +30,10 @@ class ProfileLocalDataSource {
     return _store.remove(StorageKeys.pendingProfileSubmission);
   }
 
+  Future<void> clearStoredProfile() {
+    return _store.remove(StorageKeys.storedProfile);
+  }
+
   Future<ProfileDto?> _readProfile(String key) async {
     final json = _store.readMap(key);
     if (json == null) {

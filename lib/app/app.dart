@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import 'di/providers.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
+import '../features/settings/presentation/viewmodels/app_preferences_controller.dart';
 
 class SubTrackerApp extends StatefulWidget {
   const SubTrackerApp({super.key, required this.dependencies});
@@ -45,11 +47,17 @@ class _SubTrackerAppState extends State<SubTrackerApp>
   Widget build(BuildContext context) {
     return AppProviders(
       dependencies: widget.dependencies,
-      child: MaterialApp.router(
-        debugShowCheckedModeBanner: false,
-        title: 'Subscription Tracker',
-        theme: AppTheme.light(),
-        routerConfig: _router,
+      child: Consumer<AppPreferencesController>(
+        builder: (context, preferences, _) {
+          return MaterialApp.router(
+            debugShowCheckedModeBanner: false,
+            title: 'Subscription Tracker',
+            theme: AppTheme.light(),
+            darkTheme: AppTheme.dark(),
+            themeMode: preferences.themeMode,
+            routerConfig: _router,
+          );
+        },
       ),
     );
   }

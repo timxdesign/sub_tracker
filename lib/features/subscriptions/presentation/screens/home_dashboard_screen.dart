@@ -8,6 +8,7 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../settings/presentation/viewmodels/app_preferences_controller.dart';
 import '../../domain/models/subscription.dart';
 import '../viewmodels/home_dashboard_view_model.dart';
 import '../widgets/subscription_feature_widgets.dart';
@@ -54,6 +55,8 @@ class HomeDashboardScreen extends StatelessWidget {
 
   Widget _buildBody(BuildContext context, HomeDashboardViewModel viewModel) {
     final categoryPreview = viewModel.categoryPreview;
+    final currencyCode =
+        context.watch<AppPreferencesController?>()?.currencyCode ?? 'NGN';
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -79,6 +82,7 @@ class HomeDashboardScreen extends StatelessWidget {
             Expanded(
               child: _StatCard(
                 assetPath: AppAssets.checkIllustration,
+                assetSize: 30,
                 value: formatTwoDigits(viewModel.activeCount),
                 label: 'Active',
               ),
@@ -87,6 +91,7 @@ class HomeDashboardScreen extends StatelessWidget {
             Expanded(
               child: _StatCard(
                 assetPath: AppAssets.cancelIllustration,
+                assetSize: 25,
                 value: formatTwoDigits(viewModel.expiredCount),
                 label: 'Expired',
                 trailingIcon: const Icon(
@@ -104,7 +109,7 @@ class HomeDashboardScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           child: Row(
             children: [
-              Expanded(
+              Flexible(
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -138,15 +143,18 @@ class HomeDashboardScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Flexible(
-                child: Text(
-                  formatCurrency('NGN', viewModel.expiringSoonTotal),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.end,
-                  style: AppTextStyles.body.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.error,
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    formatCurrency(currencyCode, viewModel.expiringSoonTotal),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                    style: AppTextStyles.body.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.error,
+                    ),
                   ),
                 ),
               ),
@@ -264,31 +272,73 @@ class _DashboardHeader extends StatelessWidget {
 class _StatCard extends StatelessWidget {
   const _StatCard({
     required this.assetPath,
+    required this.assetSize,
     required this.value,
     required this.label,
     this.trailingIcon,
   });
 
   final String assetPath;
+  final double assetSize;
   final String value;
   final String label;
   final Widget? trailingIcon;
 
   @override
   Widget build(BuildContext context) {
-    return SurfaceCard(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-      child: Column(
-        children: [
-          Row(
-            children: [const Spacer(), if (trailingIcon != null) trailingIcon!],
-          ),
-          SvgPicture.asset(assetPath, width: 30, height: 30),
-          const SizedBox(height: 10),
-          Text(value, style: AppTextStyles.statValue.copyWith(fontSize: 18)),
-          const SizedBox(height: 6),
-          Text(label, style: AppTextStyles.bodyMuted.copyWith(fontSize: 16)),
-        ],
+    return SizedBox(
+      height: 145,
+      child: SurfaceCard(
+        radius: 24,
+        padding: EdgeInsets.zero,
+        child: Stack(
+          children: [
+            if (trailingIcon != null)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: SizedBox(width: 16, height: 16, child: trailingIcon),
+              ),
+            Center(
+              child: SizedBox(
+                width: 52,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SvgPicture.asset(
+                      assetPath,
+                      width: assetSize,
+                      height: assetSize,
+                    ),
+                    const SizedBox(height: 12),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          value,
+                          style: AppTextStyles.statValue.copyWith(
+                            fontSize: 24,
+                            height: 29 / 24,
+                            letterSpacing: -0.96,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          label,
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.bodyMuted.copyWith(
+                            height: 17 / 14,
+                            letterSpacing: -0.14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

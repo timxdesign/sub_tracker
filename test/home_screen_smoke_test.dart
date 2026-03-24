@@ -215,6 +215,14 @@ class _FakeProfileRepository implements ProfileRepository {
   }
 
   @override
+  Future<Profile?> updateProfile({
+    required String fullName,
+    required String email,
+  }) async {
+    throw UnimplementedError();
+  }
+
+  @override
   Future<void> syncPendingProfile() async {}
 
   @override

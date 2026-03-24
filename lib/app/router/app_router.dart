@@ -7,7 +7,12 @@ import '../../features/onboarding/presentation/viewmodels/get_started_view_model
 import '../../features/onboarding/presentation/viewmodels/splash_view_model.dart';
 import '../../features/profile/presentation/screens/create_profile_screen.dart';
 import '../../features/profile/presentation/viewmodels/create_profile_view_model.dart';
+import '../../features/settings/presentation/screens/edit_profile_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/settings/presentation/screens/terms_and_conditions_screen.dart';
+import '../../features/settings/presentation/viewmodels/app_preferences_controller.dart';
+import '../../features/settings/presentation/viewmodels/edit_profile_view_model.dart';
+import '../../features/settings/presentation/viewmodels/settings_view_model.dart';
 import '../../features/subscriptions/domain/models/subscription.dart';
 import '../../features/subscriptions/presentation/screens/home_dashboard_screen.dart';
 import '../../features/subscriptions/presentation/screens/sub_insight_screen.dart';
@@ -16,6 +21,7 @@ import '../../features/subscriptions/presentation/screens/subscription_form_scre
 import '../../features/subscriptions/presentation/screens/subscriptions_screen.dart';
 import '../../features/subscriptions/presentation/screens/upcoming_payments_screen.dart';
 import '../../features/subscriptions/presentation/viewmodels/home_dashboard_view_model.dart';
+import '../../features/subscriptions/presentation/viewmodels/sub_insight_view_model.dart';
 import '../../features/subscriptions/presentation/viewmodels/subscription_details_view_model.dart';
 import '../../features/subscriptions/presentation/viewmodels/subscription_form_view_model.dart';
 import '../../features/subscriptions/presentation/viewmodels/subscriptions_view_model.dart';
@@ -101,10 +107,7 @@ GoRouter createAppRouter(AppDependencies dependencies) {
           return ChangeNotifierProvider(
             create: (_) => SubscriptionsViewModel(
               getSubscriptions: dependencies.getSubscriptions,
-            )..load(
-                displayMode: displayMode,
-                resetSelectedCategory: true,
-              ),
+            )..load(displayMode: displayMode, resetSelectedCategory: true),
             child: const SubscriptionsScreen(),
           );
         },
@@ -117,13 +120,14 @@ GoRouter createAppRouter(AppDependencies dependencies) {
             state.pathParameters['category'] ?? '',
           );
           return ChangeNotifierProvider(
-            create: (_) => SubscriptionsViewModel(
-              getSubscriptions: dependencies.getSubscriptions,
-            )..load(
-                displayMode: SubscriptionDisplayMode.list,
-                selectedCategory: category,
-                resetSelectedCategory: category == null,
-              ),
+            create: (_) =>
+                SubscriptionsViewModel(
+                  getSubscriptions: dependencies.getSubscriptions,
+                )..load(
+                  displayMode: SubscriptionDisplayMode.list,
+                  selectedCategory: category,
+                  resetSelectedCategory: category == null,
+                ),
             child: const SubscriptionsScreen(),
           );
         },
@@ -131,7 +135,14 @@ GoRouter createAppRouter(AppDependencies dependencies) {
       GoRoute(
         path: AppRoutes.insights,
         name: AppRouteNames.insights,
-        builder: (context, state) => const SubInsightScreen(),
+        builder: (context, state) {
+          return ChangeNotifierProvider(
+            create: (_) => SubInsightViewModel(
+              getSubscriptions: dependencies.getSubscriptions,
+            )..load(),
+            child: const SubInsightScreen(),
+          );
+        },
       ),
       GoRoute(
         path: AppRoutes.upcoming,
@@ -149,9 +160,13 @@ GoRouter createAppRouter(AppDependencies dependencies) {
         path: AppRoutes.newSubscription,
         name: AppRouteNames.newSubscription,
         builder: (context, state) {
+          final defaultCurrencyCode = context
+              .read<AppPreferencesController>()
+              .currencyCode;
           return ChangeNotifierProvider(
             create: (_) => SubscriptionFormViewModel(
               saveSubscription: dependencies.saveSubscription,
+              defaultCurrencyCode: defaultCurrencyCode,
             ),
             child: const SubscriptionFormScreen(),
           );
@@ -160,7 +175,33 @@ GoRouter createAppRouter(AppDependencies dependencies) {
       GoRoute(
         path: AppRoutes.settings,
         name: AppRouteNames.settings,
-        builder: (context, state) => const SettingsScreen(),
+        builder: (context, state) {
+          return ChangeNotifierProvider(
+            create: (_) => SettingsViewModel(
+              getStoredProfile: dependencies.getStoredProfile,
+              settingsRepository: dependencies.settingsRepository,
+            )..load(),
+            child: const SettingsScreen(),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.editProfile,
+        name: AppRouteNames.editProfile,
+        builder: (context, state) {
+          return ChangeNotifierProvider(
+            create: (_) => EditProfileViewModel(
+              getStoredProfile: dependencies.getStoredProfile,
+              profileRepository: dependencies.profileRepository,
+            ),
+            child: const EditProfileScreen(),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.terms,
+        name: AppRouteNames.terms,
+        builder: (context, state) => const TermsAndConditionsScreen(),
       ),
     ],
   );

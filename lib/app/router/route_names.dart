@@ -10,6 +10,8 @@ abstract final class AppRouteNames {
   static const newSubscription = 'new_subscription';
   static const subscriptionDetails = 'subscription_details';
   static const settings = 'settings';
+  static const editProfile = 'edit_profile';
+  static const terms = 'terms';
 }
 
 abstract final class AppRoutes {
@@ -22,6 +24,8 @@ abstract final class AppRoutes {
   static const upcoming = '/upcoming';
   static const newSubscription = '/add';
   static const settings = '/settings';
+  static const editProfile = '/settings/profile/edit';
+  static const terms = '/settings/terms';
 
   static String subscriptionsView({bool list = false}) =>
       list ? '$subscriptions?view=list' : subscriptions;

@@ -11,9 +11,9 @@ class ProfileRepositoryImpl implements ProfileRepository {
     required ProfileLocalDataSource localDataSource,
     required ProfileRemoteDataSource remoteDataSource,
     Duration retryInterval = const Duration(seconds: 30),
-  })  : _localDataSource = localDataSource,
-        _remoteDataSource = remoteDataSource,
-        _retryInterval = retryInterval;
+  }) : _localDataSource = localDataSource,
+       _remoteDataSource = remoteDataSource,
+       _retryInterval = retryInterval;
 
   final ProfileLocalDataSource _localDataSource;
   final ProfileRemoteDataSource _remoteDataSource;
@@ -52,6 +52,28 @@ class ProfileRepositoryImpl implements ProfileRepository {
   @override
   Future<Profile?> getStoredProfile() async {
     return (await _localDataSource.getStoredProfile())?.toDomain();
+  }
+
+  @override
+  Future<Profile?> updateProfile({
+    required String fullName,
+    required String email,
+  }) async {
+    final existingProfile = await _localDataSource.getStoredProfile();
+    if (existingProfile == null) {
+      return null;
+    }
+
+    final updatedProfile = Profile(
+      fullName: fullName,
+      email: email,
+      createdAt: existingProfile.createdAt,
+    );
+    final dto = ProfileDto.fromDomain(updatedProfile);
+
+    await _localDataSource.saveStoredProfile(dto);
+    await _localDataSource.clearPendingProfile();
+    return updatedProfile;
   }
 
   @override

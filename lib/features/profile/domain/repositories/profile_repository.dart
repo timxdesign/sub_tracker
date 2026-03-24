@@ -10,6 +10,11 @@ abstract interface class ProfileRepository {
     required String email,
   });
 
+  Future<Profile?> updateProfile({
+    required String fullName,
+    required String email,
+  });
+
   Future<void> syncPendingProfile();
 
   void startSyncLoop();

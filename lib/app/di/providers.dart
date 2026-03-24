@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/network/app_endpoints.dart';
+import '../../core/storage/app_database_file_store.dart';
 import '../../core/storage/json_preferences_store.dart';
 import '../../features/onboarding/data/datasources/onboarding_local_data_source.dart';
 import '../../features/onboarding/data/repositories/onboarding_repository_impl.dart';
@@ -17,6 +18,10 @@ import '../../features/profile/domain/repositories/profile_repository.dart';
 import '../../features/profile/domain/usecases/create_profile.dart';
 import '../../features/profile/domain/usecases/get_stored_profile.dart';
 import '../../features/profile/domain/usecases/sync_pending_profile.dart';
+import '../../features/settings/data/datasources/settings_local_data_source.dart';
+import '../../features/settings/data/repositories/settings_repository_impl.dart';
+import '../../features/settings/domain/repositories/settings_repository.dart';
+import '../../features/settings/presentation/viewmodels/app_preferences_controller.dart';
 import '../../features/subscriptions/data/datasources/subscriptions_local_data_source.dart';
 import '../../features/subscriptions/data/datasources/subscriptions_remote_data_source.dart';
 import '../../features/subscriptions/data/repositories/subscriptions_repository_impl.dart';
@@ -37,6 +42,7 @@ class AppDependencies {
     required this.getStoredProfile,
     required this.createProfile,
     required this.syncPendingProfile,
+    required this.settingsRepository,
     required this.getSubscriptions,
     required this.getSubscription,
     required this.getUpcomingPayments,
@@ -52,6 +58,7 @@ class AppDependencies {
   final GetStoredProfileUseCase getStoredProfile;
   final CreateProfileUseCase createProfile;
   final SyncPendingProfileUseCase syncPendingProfile;
+  final SettingsRepository settingsRepository;
   final GetSubscriptionsUseCase getSubscriptions;
   final GetSubscriptionUseCase getSubscription;
   final GetUpcomingPaymentsUseCase getUpcomingPayments;
@@ -75,7 +82,10 @@ AppDependencies buildAppDependencies({
   required SharedPreferences preferences,
   required http.Client httpClient,
 }) {
-  final store = JsonPreferencesStore(preferences);
+  final store = JsonPreferencesStore(
+    preferences,
+    databaseFileStore: AppDatabaseFileStore(),
+  );
 
   final onboardingRepository = OnboardingRepositoryImpl(
     localDataSource: OnboardingLocalDataSource(store),
@@ -97,6 +107,10 @@ AppDependencies buildAppDependencies({
     ),
   );
 
+  final settingsRepository = SettingsRepositoryImpl(
+    localDataSource: SettingsLocalDataSource(store),
+  );
+
   return AppDependencies(
     httpClient: httpClient,
     onboardingRepository: onboardingRepository,
@@ -107,6 +121,7 @@ AppDependencies buildAppDependencies({
     getStoredProfile: GetStoredProfileUseCase(profileRepository),
     createProfile: CreateProfileUseCase(profileRepository),
     syncPendingProfile: SyncPendingProfileUseCase(profileRepository),
+    settingsRepository: settingsRepository,
     getSubscriptions: GetSubscriptionsUseCase(subscriptionsRepository),
     getSubscription: GetSubscriptionUseCase(subscriptionsRepository),
     getUpcomingPayments: GetUpcomingPaymentsUseCase(subscriptionsRepository),
@@ -132,9 +147,19 @@ class AppProviders extends StatelessWidget {
         Provider<OnboardingRepository>.value(
           value: dependencies.onboardingRepository,
         ),
-        Provider<ProfileRepository>.value(value: dependencies.profileRepository),
+        Provider<ProfileRepository>.value(
+          value: dependencies.profileRepository,
+        ),
+        Provider<SettingsRepository>.value(
+          value: dependencies.settingsRepository,
+        ),
         Provider<SubscriptionsRepository>.value(
           value: dependencies.subscriptionsRepository,
+        ),
+        ChangeNotifierProvider(
+          create: (_) => AppPreferencesController(
+            settingsRepository: dependencies.settingsRepository,
+          )..load(),
         ),
       ],
       child: child,
