@@ -1,5 +1,4 @@
-import 'package:flutter/foundation.dart';
-
+import '../../../../core/viewmodels/app_view_model.dart';
 import '../../domain/repositories/settings_repository.dart';
 
 class ImportExistingProfileResult {
@@ -9,7 +8,7 @@ class ImportExistingProfileResult {
   final String? message;
 }
 
-class ImportExistingProfileViewModel extends ChangeNotifier {
+class ImportExistingProfileViewModel extends AppViewModel {
   ImportExistingProfileViewModel({
     required SettingsRepository settingsRepository,
   }) : _settingsRepository = settingsRepository;
@@ -30,7 +29,12 @@ class ImportExistingProfileViewModel extends ChangeNotifier {
     try {
       await _settingsRepository.importDatabaseBackup(filePath);
       return const ImportExistingProfileResult(success: true);
-    } catch (_) {
+    } catch (error, stackTrace) {
+      reportError(
+        error,
+        stackTrace,
+        context: 'ImportExistingProfileViewModel.importFromFile',
+      );
       return const ImportExistingProfileResult(
         success: false,
         message: 'Unable to import that backup file.',

@@ -3,14 +3,15 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../../../../core/logging/app_logger.dart';
 import '../dto/subscription_dto.dart';
 
 class SubscriptionsRemoteDataSource {
   SubscriptionsRemoteDataSource({
     required http.Client client,
     required String endpoint,
-  })  : _client = client,
-        _endpoint = endpoint.trim();
+  }) : _client = client,
+       _endpoint = endpoint.trim();
 
   final http.Client _client;
   final String _endpoint;
@@ -43,10 +44,16 @@ class SubscriptionsRemoteDataSource {
       return decoded
           .whereType<Map>()
           .map(
-            (entry) => SubscriptionDto.fromJson(Map<String, dynamic>.from(entry)),
+            (entry) =>
+                SubscriptionDto.fromJson(Map<String, dynamic>.from(entry)),
           )
           .toList(growable: false);
-    } catch (_) {
+    } catch (error, stackTrace) {
+      AppLogger.error(
+        context: 'SubscriptionsRemoteDataSource.fetchSubscriptions',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return const [];
     }
   }
@@ -69,7 +76,12 @@ class SubscriptionsRemoteDataSource {
             body: jsonEncode(subscription.toJson()),
           )
           .timeout(const Duration(seconds: 10));
-    } catch (_) {
+    } catch (error, stackTrace) {
+      AppLogger.error(
+        context: 'SubscriptionsRemoteDataSource.upsertSubscription',
+        error: error,
+        stackTrace: stackTrace,
+      );
       // Local data remains the source of truth for offline-first behavior.
     }
   }

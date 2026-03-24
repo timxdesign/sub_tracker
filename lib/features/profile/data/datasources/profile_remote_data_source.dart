@@ -3,14 +3,15 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../../../../core/logging/app_logger.dart';
 import '../dto/profile_dto.dart';
 
 class ProfileRemoteDataSource {
   ProfileRemoteDataSource({
     required http.Client client,
     required String endpoint,
-  })  : _client = client,
-        _endpoint = endpoint.trim();
+  }) : _client = client,
+       _endpoint = endpoint.trim();
 
   final http.Client _client;
   final String _endpoint;
@@ -42,7 +43,12 @@ class ProfileRemoteDataSource {
           .timeout(const Duration(seconds: 10));
 
       return response.statusCode >= 200 && response.statusCode < 300;
-    } catch (_) {
+    } catch (error, stackTrace) {
+      AppLogger.error(
+        context: 'ProfileRemoteDataSource.syncProfile',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return false;
     }
   }

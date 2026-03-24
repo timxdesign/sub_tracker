@@ -1,9 +1,8 @@
-import 'package:flutter/foundation.dart';
-
+import '../../../../core/viewmodels/app_view_model.dart';
 import '../../domain/models/subscription.dart';
 import '../../domain/usecases/get_subscriptions.dart';
 
-class SubInsightViewModel extends ChangeNotifier {
+class SubInsightViewModel extends AppViewModel {
   SubInsightViewModel({
     required GetSubscriptionsUseCase getSubscriptions,
     DateTime Function()? now,
@@ -105,7 +104,8 @@ class SubInsightViewModel extends ChangeNotifier {
 
     try {
       _subscriptions = await _getSubscriptions();
-    } catch (_) {
+    } catch (error, stackTrace) {
+      reportError(error, stackTrace, context: 'SubInsightViewModel.load');
       _errorMessage = 'Unable to load subscription insights right now.';
     } finally {
       _isLoading = false;

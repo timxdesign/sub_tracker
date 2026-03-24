@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -49,7 +51,8 @@ void main() {
         ),
       ),
       getSubscriptions: GetSubscriptionsUseCase(subscriptionsRepository),
-    )..load();
+    );
+    unawaited(viewModel.load());
 
     await tester.pumpWidget(
       MaterialApp(

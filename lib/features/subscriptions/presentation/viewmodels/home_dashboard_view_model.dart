@@ -1,16 +1,15 @@
-import 'package:flutter/foundation.dart';
-
+import '../../../../core/viewmodels/app_view_model.dart';
 import '../../../profile/domain/models/profile.dart';
 import '../../../profile/domain/usecases/get_stored_profile.dart';
 import '../../domain/models/subscription.dart';
 import '../../domain/usecases/get_subscriptions.dart';
 
-class HomeDashboardViewModel extends ChangeNotifier {
+class HomeDashboardViewModel extends AppViewModel {
   HomeDashboardViewModel({
     required GetStoredProfileUseCase getStoredProfile,
     required GetSubscriptionsUseCase getSubscriptions,
-  })  : _getStoredProfile = getStoredProfile,
-        _getSubscriptions = getSubscriptions;
+  }) : _getStoredProfile = getStoredProfile,
+       _getSubscriptions = getSubscriptions;
 
   final GetStoredProfileUseCase _getStoredProfile;
   final GetSubscriptionsUseCase _getSubscriptions;
@@ -24,11 +23,10 @@ class HomeDashboardViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   String get firstName => _firstName;
   List<Subscription> get subscriptions => _subscriptions;
-  List<Subscription> get upcomingPreview =>
-      _subscriptions
-          .where((subscription) => !subscription.isExpired)
-          .take(3)
-          .toList(growable: false);
+  List<Subscription> get upcomingPreview => _subscriptions
+      .where((subscription) => !subscription.isExpired)
+      .take(3)
+      .toList(growable: false);
 
   int get activeCount =>
       _subscriptions.where((subscription) => !subscription.isExpired).length;
@@ -58,7 +56,9 @@ class HomeDashboardViewModel extends ChangeNotifier {
           .where((subscription) => subscription.category == category)
           .length;
       if (count > 0) {
-        summaries.add(DashboardCategoryPreview(category: category, count: count));
+        summaries.add(
+          DashboardCategoryPreview(category: category, count: count),
+        );
       }
     }
 
@@ -99,7 +99,8 @@ class HomeDashboardViewModel extends ChangeNotifier {
       if (fullName != null && fullName.trim().isNotEmpty) {
         _firstName = fullName.trim().split(RegExp(r'\s+')).first;
       }
-    } catch (_) {
+    } catch (error, stackTrace) {
+      reportError(error, stackTrace, context: 'HomeDashboardViewModel.load');
       _errorMessage = 'Unable to load your dashboard right now.';
     } finally {
       _isLoading = false;
@@ -109,10 +110,7 @@ class HomeDashboardViewModel extends ChangeNotifier {
 }
 
 class DashboardCategoryPreview {
-  const DashboardCategoryPreview({
-    required this.category,
-    required this.count,
-  });
+  const DashboardCategoryPreview({required this.category, required this.count});
 
   final SubscriptionCategory category;
   final int count;

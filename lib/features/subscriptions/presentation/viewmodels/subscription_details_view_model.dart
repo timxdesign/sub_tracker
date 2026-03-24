@@ -1,10 +1,9 @@
-import 'package:flutter/foundation.dart';
-
+import '../../../../core/viewmodels/app_view_model.dart';
 import '../../domain/models/subscription.dart';
 import '../../domain/usecases/get_subscription.dart';
 import '../../domain/usecases/save_subscription.dart';
 
-class SubscriptionDetailsViewModel extends ChangeNotifier {
+class SubscriptionDetailsViewModel extends AppViewModel {
   SubscriptionDetailsViewModel({
     required GetSubscriptionUseCase getSubscription,
     required SaveSubscriptionUseCase saveSubscription,
@@ -28,7 +27,16 @@ class SubscriptionDetailsViewModel extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    _subscription = await _getSubscription(id);
+    try {
+      _subscription = await _getSubscription(id);
+    } catch (error, stackTrace) {
+      reportError(
+        error,
+        stackTrace,
+        context: 'SubscriptionDetailsViewModel.load',
+      );
+      _subscription = null;
+    }
 
     _isLoading = false;
     notifyListeners();
@@ -50,6 +58,12 @@ class SubscriptionDetailsViewModel extends ChangeNotifier {
       if (_subscriptionId != null) {
         _subscription = await _getSubscription(_subscriptionId!);
       }
+    } catch (error, stackTrace) {
+      reportError(
+        error,
+        stackTrace,
+        context: 'SubscriptionDetailsViewModel.renew',
+      );
     } finally {
       _isUpdating = false;
       notifyListeners();

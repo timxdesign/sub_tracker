@@ -1,9 +1,8 @@
-import 'package:flutter/foundation.dart';
-
+import '../../../../core/viewmodels/app_view_model.dart';
 import '../../domain/models/subscription.dart';
 import '../../domain/usecases/get_upcoming_payments.dart';
 
-class UpcomingPaymentsViewModel extends ChangeNotifier {
+class UpcomingPaymentsViewModel extends AppViewModel {
   UpcomingPaymentsViewModel({
     required GetUpcomingPaymentsUseCase getUpcomingPayments,
   }) : _getUpcomingPayments = getUpcomingPayments;
@@ -25,7 +24,8 @@ class UpcomingPaymentsViewModel extends ChangeNotifier {
 
     try {
       _payments = await _getUpcomingPayments();
-    } catch (_) {
+    } catch (error, stackTrace) {
+      reportError(error, stackTrace, context: 'UpcomingPaymentsViewModel.load');
       _errorMessage = 'Unable to load upcoming payments right now.';
     } finally {
       _isLoading = false;

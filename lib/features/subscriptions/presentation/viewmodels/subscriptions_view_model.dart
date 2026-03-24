@@ -1,14 +1,12 @@
-import 'package:flutter/foundation.dart';
-
+import '../../../../core/viewmodels/app_view_model.dart';
 import '../../domain/models/subscription.dart';
 import '../../domain/usecases/get_subscriptions.dart';
 
 enum SubscriptionDisplayMode { grid, list }
 
-class SubscriptionsViewModel extends ChangeNotifier {
-  SubscriptionsViewModel({
-    required GetSubscriptionsUseCase getSubscriptions,
-  }) : _getSubscriptions = getSubscriptions;
+class SubscriptionsViewModel extends AppViewModel {
+  SubscriptionsViewModel({required GetSubscriptionsUseCase getSubscriptions})
+    : _getSubscriptions = getSubscriptions;
 
   final GetSubscriptionsUseCase _getSubscriptions;
 
@@ -53,16 +51,18 @@ class SubscriptionsViewModel extends ChangeNotifier {
 
   List<Subscription> get filteredSubscriptions {
     final query = _searchQuery.trim().toLowerCase();
-    return _subscriptions.where((subscription) {
-      final matchesCategory = _selectedCategory == null
-          ? true
-          : subscription.category == _selectedCategory;
-      final matchesQuery = query.isEmpty
-          ? true
-          : subscription.name.toLowerCase().contains(query) ||
-              subscription.categoryLabel.toLowerCase().contains(query);
-      return matchesCategory && matchesQuery;
-    }).toList(growable: false);
+    return _subscriptions
+        .where((subscription) {
+          final matchesCategory = _selectedCategory == null
+              ? true
+              : subscription.category == _selectedCategory;
+          final matchesQuery = query.isEmpty
+              ? true
+              : subscription.name.toLowerCase().contains(query) ||
+                    subscription.categoryLabel.toLowerCase().contains(query);
+          return matchesCategory && matchesQuery;
+        })
+        .toList(growable: false);
   }
 
   List<CategoryGroup> get groupedSubscriptions {
@@ -99,7 +99,8 @@ class SubscriptionsViewModel extends ChangeNotifier {
 
     try {
       _subscriptions = await _getSubscriptions();
-    } catch (_) {
+    } catch (error, stackTrace) {
+      reportError(error, stackTrace, context: 'SubscriptionsViewModel.load');
       _errorMessage = 'Unable to load subscriptions right now.';
     } finally {
       _isLoading = false;
@@ -142,20 +143,14 @@ class SubscriptionsViewModel extends ChangeNotifier {
 }
 
 class CategorySummary {
-  const CategorySummary({
-    required this.category,
-    required this.count,
-  });
+  const CategorySummary({required this.category, required this.count});
 
   final SubscriptionCategory category;
   final int count;
 }
 
 class CategoryGroup {
-  const CategoryGroup({
-    required this.category,
-    required this.subscriptions,
-  });
+  const CategoryGroup({required this.category, required this.subscriptions});
 
   final SubscriptionCategory category;
   final List<Subscription> subscriptions;

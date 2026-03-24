@@ -1,14 +1,13 @@
-import 'package:flutter/foundation.dart';
-
+import '../../../../core/viewmodels/app_view_model.dart';
 import '../../domain/usecases/create_profile.dart';
 import '../../domain/usecases/sync_pending_profile.dart';
 
-class CreateProfileViewModel extends ChangeNotifier {
+class CreateProfileViewModel extends AppViewModel {
   CreateProfileViewModel({
     required CreateProfileUseCase createProfile,
     required SyncPendingProfileUseCase syncPendingProfile,
-  })  : _createProfile = createProfile,
-        _syncPendingProfile = syncPendingProfile;
+  }) : _createProfile = createProfile,
+       _syncPendingProfile = syncPendingProfile;
 
   static final RegExp _emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 
@@ -82,12 +81,12 @@ class CreateProfileViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _createProfile(
-        fullName: _name.trim(),
-        email: _email.trim(),
-      );
+      await _createProfile(fullName: _name.trim(), email: _email.trim());
       await _syncPendingProfile();
       return true;
+    } catch (error, stackTrace) {
+      reportError(error, stackTrace, context: 'CreateProfileViewModel.submit');
+      return false;
     } finally {
       _isSubmitting = false;
       notifyListeners();

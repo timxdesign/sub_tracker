@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../logging/app_logger.dart';
 import 'app_database_file_store.dart';
 
 class JsonPreferencesStore {
@@ -37,7 +38,12 @@ class JsonPreferencesStore {
       }
 
       return Map<String, dynamic>.from(decoded);
-    } catch (_) {
+    } catch (error, stackTrace) {
+      AppLogger.error(
+        context: 'JsonPreferencesStore.readMap($key)',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return null;
     }
   }
@@ -58,7 +64,12 @@ class JsonPreferencesStore {
           .whereType<Map>()
           .map((entry) => Map<String, dynamic>.from(entry))
           .toList(growable: false);
-    } catch (_) {
+    } catch (error, stackTrace) {
+      AppLogger.error(
+        context: 'JsonPreferencesStore.readList($key)',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return const [];
     }
   }

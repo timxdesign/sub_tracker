@@ -1,10 +1,9 @@
-import 'package:flutter/foundation.dart';
-
+import '../../../../core/viewmodels/app_view_model.dart';
 import '../../../profile/domain/models/profile.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../profile/domain/usecases/get_stored_profile.dart';
 
-class EditProfileViewModel extends ChangeNotifier {
+class EditProfileViewModel extends AppViewModel {
   EditProfileViewModel({
     required GetStoredProfileUseCase getStoredProfile,
     required ProfileRepository profileRepository,
@@ -65,7 +64,8 @@ class EditProfileViewModel extends ChangeNotifier {
       } else {
         _applyProfile(profile);
       }
-    } catch (_) {
+    } catch (error, stackTrace) {
+      reportError(error, stackTrace, context: 'EditProfileViewModel.load');
       _screenError = 'Unable to load your profile right now.';
     } finally {
       _isLoading = false;
@@ -117,7 +117,8 @@ class EditProfileViewModel extends ChangeNotifier {
       }
       _applyProfile(updatedProfile);
       return true;
-    } catch (_) {
+    } catch (error, stackTrace) {
+      reportError(error, stackTrace, context: 'EditProfileViewModel.save');
       _screenError = 'Unable to save your profile right now.';
       return false;
     } finally {

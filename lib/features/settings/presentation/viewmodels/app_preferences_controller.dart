@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/viewmodels/app_view_model.dart';
 import '../../domain/models/app_preferences.dart';
 import '../../domain/repositories/settings_repository.dart';
 
-class AppPreferencesController extends ChangeNotifier {
+class AppPreferencesController extends AppViewModel {
   AppPreferencesController({required SettingsRepository settingsRepository})
     : _settingsRepository = settingsRepository;
 
@@ -29,6 +30,8 @@ class AppPreferencesController extends ChangeNotifier {
       _currencyCode = preferences.currencyCode;
       _themePreference = preferences.themePreference;
       _biometricsEnabled = preferences.biometricsEnabled;
+    } catch (error, stackTrace) {
+      reportError(error, stackTrace, context: 'AppPreferencesController.load');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -42,9 +45,17 @@ class AppPreferencesController extends ChangeNotifier {
       return;
     }
 
-    await _settingsRepository.saveCurrencyCode(currencyCode);
-    _currencyCode = currencyCode;
-    notifyListeners();
+    try {
+      await _settingsRepository.saveCurrencyCode(currencyCode);
+      _currencyCode = currencyCode;
+      notifyListeners();
+    } catch (error, stackTrace) {
+      reportError(
+        error,
+        stackTrace,
+        context: 'AppPreferencesController.updateCurrencyCode',
+      );
+    }
   }
 
   Future<void> updateThemePreference(SettingsThemePreference preference) async {
@@ -52,8 +63,16 @@ class AppPreferencesController extends ChangeNotifier {
       return;
     }
 
-    await _settingsRepository.saveThemePreference(preference);
-    _themePreference = preference;
-    notifyListeners();
+    try {
+      await _settingsRepository.saveThemePreference(preference);
+      _themePreference = preference;
+      notifyListeners();
+    } catch (error, stackTrace) {
+      reportError(
+        error,
+        stackTrace,
+        context: 'AppPreferencesController.updateThemePreference',
+      );
+    }
   }
 }

@@ -1,5 +1,4 @@
-import 'package:flutter/foundation.dart';
-
+import '../../../../core/viewmodels/app_view_model.dart';
 import '../../../profile/domain/models/profile.dart';
 import '../../../profile/domain/usecases/get_stored_profile.dart';
 import '../../domain/repositories/settings_repository.dart';
@@ -16,7 +15,7 @@ class SettingsActionResult {
   final String? backupPath;
 }
 
-class SettingsViewModel extends ChangeNotifier {
+class SettingsViewModel extends AppViewModel {
   SettingsViewModel({
     required GetStoredProfileUseCase getStoredProfile,
     required SettingsRepository settingsRepository,
@@ -43,7 +42,8 @@ class SettingsViewModel extends ChangeNotifier {
 
     try {
       _profile = await _getStoredProfile();
-    } catch (_) {
+    } catch (error, stackTrace) {
+      reportError(error, stackTrace, context: 'SettingsViewModel.load');
       _errorMessage = 'Unable to load settings right now.';
     } finally {
       _isLoading = false;
@@ -62,7 +62,12 @@ class SettingsViewModel extends ChangeNotifier {
       await _settingsRepository.deleteLocalProfileData();
       _profile = null;
       return const SettingsActionResult(success: true);
-    } catch (_) {
+    } catch (error, stackTrace) {
+      reportError(
+        error,
+        stackTrace,
+        context: 'SettingsViewModel.deleteProfile',
+      );
       return const SettingsActionResult(
         success: false,
         message: 'Unable to delete the profile right now.',
@@ -85,7 +90,12 @@ class SettingsViewModel extends ChangeNotifier {
       await _settingsRepository.deleteLocalProfileData();
       _profile = null;
       return SettingsActionResult(success: true, backupPath: backupFile.path);
-    } catch (_) {
+    } catch (error, stackTrace) {
+      reportError(
+        error,
+        stackTrace,
+        context: 'SettingsViewModel.backupAndDeleteProfile',
+      );
       return const SettingsActionResult(
         success: false,
         message: 'Backup failed, so the profile was not deleted.',
