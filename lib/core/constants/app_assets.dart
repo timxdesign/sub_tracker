@@ -12,6 +12,7 @@ abstract final class AppAssets {
   static const gridInactive = 'assets/components/Grid_Inactive.svg';
   static const listActive = 'assets/components/List_Active.svg';
   static const listInactive = 'assets/components/List_Inactive.svg';
+  static const addIcon = 'assets/icons/Add.svg';
   static const dataPlanIcon = 'assets/icons/Data plan.svg';
   static const appsIcon = 'assets/icons/Apps.svg';
   static const toolsIcon = 'assets/icons/Tools.svg';

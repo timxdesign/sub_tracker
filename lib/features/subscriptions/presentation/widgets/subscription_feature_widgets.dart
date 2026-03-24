@@ -35,37 +35,37 @@ class SubscriptionShellScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppScreen(
       backgroundColor: AppColors.background,
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'subscription-shell-fab-${destination.name}',
-        onPressed: onAddTap,
-        backgroundColor: AppColors.brandGreen,
-        foregroundColor: Colors.white,
-        elevation: 10,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, size: 30),
-      ),
-      bottomNavigationBar: PhoneViewport(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 208,
-                child: _BottomDock(
-                  destination: destination,
-                  onHomeTap: onHomeTap,
-                  onSubscriptionsTap: onSubscriptionsTap,
-                  onInsightsTap: onInsightsTap,
-                  onSettingsTap: onSettingsTap,
+      child: PhoneViewport(
+        child: Stack(
+          children: [
+            Positioned.fill(child: child),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: SafeArea(
+                top: false,
+                minimum: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 208,
+                      height: 64,
+                      child: _BottomDock(
+                        destination: destination,
+                        onHomeTap: onHomeTap,
+                        onSubscriptionsTap: onSubscriptionsTap,
+                        onInsightsTap: onInsightsTap,
+                        onSettingsTap: onSettingsTap,
+                      ),
+                    ),
+                    const Spacer(),
+                    _AddSubscriptionButton(onTap: onAddTap),
+                  ],
                 ),
               ),
-              const Spacer(),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-      child: PhoneViewport(child: child),
     );
   }
 }
@@ -89,13 +89,6 @@ class SurfaceCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(radius),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 24,
-            offset: Offset(0, 12),
-          ),
-        ],
       ),
       child: child,
     );
@@ -118,9 +111,7 @@ class SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(
-          child: Text(title, style: AppTextStyles.sectionTitle),
-        ),
+        Expanded(child: Text(title, style: AppTextStyles.sectionTitle)),
         if (actionLabel != null)
           TextButton(
             onPressed: onTap,
@@ -157,11 +148,7 @@ class SubscriptionCategoryIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final assetPath = _assetPathForCategory(category);
     if (assetPath != null) {
-      return SvgPicture.asset(
-        assetPath,
-        width: size,
-        height: size,
-      );
+      return SvgPicture.asset(assetPath, width: size, height: size);
     }
 
     return Icon(
@@ -209,12 +196,17 @@ class SubscriptionFilterChip extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               formatTwoDigits(count),
-              style: (isSelected
-                      ? AppTextStyles.smallLabel.copyWith(color: Colors.white70)
-                      : AppTextStyles.smallLabel)
-                  .copyWith(
-                    color: isSelected ? Colors.white70 : AppColors.textSecondary,
-                  ),
+              style:
+                  (isSelected
+                          ? AppTextStyles.smallLabel.copyWith(
+                              color: Colors.white70,
+                            )
+                          : AppTextStyles.smallLabel)
+                      .copyWith(
+                        color: isSelected
+                            ? Colors.white70
+                            : AppColors.textSecondary,
+                      ),
             ),
           ],
         ),
@@ -240,7 +232,11 @@ class SubscriptionSearchField extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
         children: [
-          const Icon(Icons.search_rounded, color: AppColors.textSecondary, size: 22),
+          const Icon(
+            Icons.search_rounded,
+            color: AppColors.textSecondary,
+            size: 22,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: TextField(
@@ -316,10 +312,7 @@ class SubscriptionPaymentTile extends StatelessWidget {
 }
 
 class SubscriptionAvatar extends StatelessWidget {
-  const SubscriptionAvatar({
-    super.key,
-    required this.subscription,
-  });
+  const SubscriptionAvatar({super.key, required this.subscription});
 
   final Subscription subscription;
 
@@ -332,13 +325,6 @@ class SubscriptionAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         shape: BoxShape.circle,
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 18,
-            offset: Offset(0, 8),
-          ),
-        ],
       ),
       alignment: Alignment.center,
       child: logoAsset == null
@@ -406,43 +392,52 @@ class _BottomDock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SurfaceCard(
-      radius: 32,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _DockIcon(
-            assetPath: AppAssets.homeNavIcon,
-            isSelected: destination == SubscriptionPrimaryDestination.home,
-            assetColor: destination == SubscriptionPrimaryDestination.home
-                ? null
-                : AppColors.navInactive,
-            onTap: onHomeTap,
-          ),
-          _DockIcon(
-            assetPath: destination == SubscriptionPrimaryDestination.subscriptions
-                ? AppAssets.subscriptionsNavActive
-                : AppAssets.subscriptionsNavInactive,
-            isSelected:
-                destination == SubscriptionPrimaryDestination.subscriptions,
-            onTap: onSubscriptionsTap,
-          ),
-          _DockIcon(
-            assetPath: destination == SubscriptionPrimaryDestination.insights
-                ? AppAssets.insightsNavActive
-                : AppAssets.insightsNavInactive,
-            isSelected: destination == SubscriptionPrimaryDestination.insights,
-            onTap: onInsightsTap,
-          ),
-          _DockIcon(
-            assetPath: destination == SubscriptionPrimaryDestination.settings
-                ? AppAssets.settingsNavActive
-                : AppAssets.settingsNavInactive,
-            isSelected: destination == SubscriptionPrimaryDestination.settings,
-            onTap: onSettingsTap,
-          ),
-        ],
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: const Color(0xFFF4F6F8)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _DockIcon(
+              assetPath: AppAssets.homeNavIcon,
+              isSelected: destination == SubscriptionPrimaryDestination.home,
+              assetColor: destination == SubscriptionPrimaryDestination.home
+                  ? null
+                  : AppColors.navInactive,
+              onTap: onHomeTap,
+            ),
+            _DockIcon(
+              assetPath:
+                  destination == SubscriptionPrimaryDestination.subscriptions
+                  ? AppAssets.subscriptionsNavActive
+                  : AppAssets.subscriptionsNavInactive,
+              isSelected:
+                  destination == SubscriptionPrimaryDestination.subscriptions,
+              onTap: onSubscriptionsTap,
+            ),
+            _DockIcon(
+              assetPath: destination == SubscriptionPrimaryDestination.insights
+                  ? AppAssets.insightsNavActive
+                  : AppAssets.insightsNavInactive,
+              isSelected:
+                  destination == SubscriptionPrimaryDestination.insights,
+              onTap: onInsightsTap,
+            ),
+            _DockIcon(
+              assetPath: destination == SubscriptionPrimaryDestination.settings
+                  ? AppAssets.settingsNavActive
+                  : AppAssets.settingsNavInactive,
+              isSelected:
+                  destination == SubscriptionPrimaryDestination.settings,
+              onTap: onSettingsTap,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -465,10 +460,10 @@ class _DockIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkResponse(
       onTap: onTap,
-      radius: 24,
+      radius: 28,
       child: Container(
-        width: 36,
-        height: 36,
+        width: 48,
+        height: 48,
         decoration: BoxDecoration(
           color: isSelected ? AppColors.brandSoft : Colors.transparent,
           shape: BoxShape.circle,
@@ -484,6 +479,31 @@ class _DockIcon extends StatelessWidget {
                     : ColorFilter.mode(assetColor!, BlendMode.srcIn),
               )
             : const SizedBox.shrink(),
+      ),
+    );
+  }
+}
+
+class _AddSubscriptionButton extends StatelessWidget {
+  const _AddSubscriptionButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkResponse(
+      key: const ValueKey('subscription-shell-add-button'),
+      onTap: onTap,
+      radius: 36,
+      child: Container(
+        width: 64,
+        height: 64,
+        decoration: const BoxDecoration(
+          color: AppColors.brandGreen,
+          shape: BoxShape.circle,
+        ),
+        alignment: Alignment.center,
+        child: SvgPicture.asset(AppAssets.addIcon, width: 24, height: 24),
       ),
     );
   }

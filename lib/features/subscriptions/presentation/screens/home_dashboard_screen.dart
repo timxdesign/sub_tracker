@@ -26,6 +26,10 @@ class HomeDashboardScreen extends StatelessWidget {
     await context.push<void>(AppRoutes.subscriptionDetails(subscriptionId));
   }
 
+  void _openCategory(BuildContext context, SubscriptionCategory category) {
+    context.go(AppRoutes.categorySubscriptions(category.slug));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<HomeDashboardViewModel>(
@@ -100,30 +104,50 @@ class HomeDashboardScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           child: Row(
             children: [
-              Text(
-                'Expiring soon',
-                style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(width: 10),
-              Container(
-                width: 24,
-                height: 24,
-                decoration: const BoxDecoration(
-                  color: AppColors.darkBadge,
-                  shape: BoxShape.circle,
+              Expanded(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        'Expiring soon',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.body.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: const BoxDecoration(
+                        color: AppColors.darkBadge,
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        viewModel.expiringSoonCount.toString(),
+                        style: AppTextStyles.smallLabel.copyWith(
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                alignment: Alignment.center,
+              ),
+              const SizedBox(width: 12),
+              Flexible(
                 child: Text(
-                  viewModel.expiringSoonCount.toString(),
-                  style: AppTextStyles.smallLabel.copyWith(color: Colors.white),
-                ),
-              ),
-              const Spacer(),
-              Text(
-                formatCurrency('NGN', viewModel.expiringSoonTotal),
-                style: AppTextStyles.body.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.error,
+                  formatCurrency('NGN', viewModel.expiringSoonTotal),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: AppTextStyles.body.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.error,
+                  ),
                 ),
               ),
             ],
@@ -137,19 +161,29 @@ class HomeDashboardScreen extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         Row(
-          children: categoryPreview.asMap().entries.map((entry) {
-            final index = entry.key;
-            final summary = entry.value;
-            return Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  right: index == 0 ? 8 : 0,
-                  left: index == 0 ? 0 : 8,
-                ),
-                child: _CategoryPreviewCard(summary: summary),
-              ),
-            );
-          }).toList(growable: false),
+          children: categoryPreview
+              .asMap()
+              .entries
+              .map((entry) {
+                final index = entry.key;
+                final summary = entry.value;
+                return Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      right: index == 0 ? 8 : 0,
+                      left: index == 0 ? 0 : 8,
+                    ),
+                    child: _CategoryPreviewCard(
+                      key: ValueKey(
+                        'home-category-preview-${summary.category.slug}',
+                      ),
+                      summary: summary,
+                      onTap: () => _openCategory(context, summary.category),
+                    ),
+                  ),
+                );
+              })
+              .toList(growable: false),
         ),
         const SizedBox(height: 22),
         SectionHeader(
@@ -166,19 +200,25 @@ class HomeDashboardScreen extends StatelessWidget {
         else
           SurfaceCard(
             child: Column(
-              children: viewModel.upcomingPreview.asMap().entries.map((entry) {
-                final index = entry.key;
-                final subscription = entry.value;
-                return Padding(
-                  padding: EdgeInsets.only(
-                    bottom: index == viewModel.upcomingPreview.length - 1 ? 0 : 8,
-                  ),
-                  child: SubscriptionPaymentTile(
-                    subscription: subscription,
-                    onTap: () => _openDetails(context, subscription.id),
-                  ),
-                );
-              }).toList(growable: false),
+              children: viewModel.upcomingPreview
+                  .asMap()
+                  .entries
+                  .map((entry) {
+                    final index = entry.key;
+                    final subscription = entry.value;
+                    return Padding(
+                      padding: EdgeInsets.only(
+                        bottom: index == viewModel.upcomingPreview.length - 1
+                            ? 0
+                            : 8,
+                      ),
+                      child: SubscriptionPaymentTile(
+                        subscription: subscription,
+                        onTap: () => _openDetails(context, subscription.id),
+                      ),
+                    );
+                  })
+                  .toList(growable: false),
             ),
           ),
       ],
@@ -187,9 +227,7 @@ class HomeDashboardScreen extends StatelessWidget {
 }
 
 class _DashboardHeader extends StatelessWidget {
-  const _DashboardHeader({
-    required this.firstName,
-  });
+  const _DashboardHeader({required this.firstName});
 
   final String firstName;
 
@@ -243,10 +281,7 @@ class _StatCard extends StatelessWidget {
       child: Column(
         children: [
           Row(
-            children: [
-              const Spacer(),
-              if (trailingIcon != null) trailingIcon!,
-            ],
+            children: [const Spacer(), if (trailingIcon != null) trailingIcon!],
           ),
           SvgPicture.asset(assetPath, width: 30, height: 30),
           const SizedBox(height: 10),
@@ -261,27 +296,34 @@ class _StatCard extends StatelessWidget {
 
 class _CategoryPreviewCard extends StatelessWidget {
   const _CategoryPreviewCard({
+    super.key,
     required this.summary,
+    required this.onTap,
   });
 
   final DashboardCategoryPreview summary;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return SurfaceCard(
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SubscriptionCategoryIcon(category: summary.category, size: 22),
-          const SizedBox(height: 24),
-          Text(summary.category.label, style: AppTextStyles.bodyMuted),
-          const SizedBox(height: 4),
-          Text(
-            formatTwoDigits(summary.count),
-            style: AppTextStyles.statValue,
-          ),
-        ],
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(28),
+      child: SurfaceCard(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SubscriptionCategoryIcon(category: summary.category, size: 22),
+            const SizedBox(height: 24),
+            Text(summary.category.label, style: AppTextStyles.bodyMuted),
+            const SizedBox(height: 4),
+            Text(
+              formatTwoDigits(summary.count),
+              style: AppTextStyles.statValue,
+            ),
+          ],
+        ),
       ),
     );
   }

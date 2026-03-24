@@ -15,7 +15,11 @@ class PhoneViewport extends StatelessWidget {
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 390),
-          child: SizedBox(width: double.infinity, child: child),
+          child: SizedBox(
+            width: double.infinity,
+            height: double.infinity,
+            child: child,
+          ),
         ),
       ),
     );

@@ -57,6 +57,7 @@ void main() {
   });
 
   test('home dashboard view model derives preview data', () async {
+    final now = DateTime.now();
     final subscriptionsRepository = _FakeSubscriptionsRepository([
       Subscription(
         id: 'netflix',
@@ -65,8 +66,8 @@ void main() {
         price: 8000,
         currencyCode: 'NGN',
         billingCycle: SubscriptionBillingCycle.monthly,
-        nextBillingDate: DateTime(2026, 3, 23),
-        createdAt: DateTime(2026, 3, 1),
+        nextBillingDate: now.add(const Duration(days: 3)),
+        createdAt: now.subtract(const Duration(days: 22)),
       ),
     ]);
     final viewModel = HomeDashboardViewModel(
@@ -75,7 +76,7 @@ void main() {
           Profile(
             fullName: 'Timothy Doe',
             email: 'timothy@example.com',
-            createdAt: DateTime(2026, 3, 20),
+            createdAt: now.subtract(const Duration(days: 4)),
           ),
         ),
       ),
