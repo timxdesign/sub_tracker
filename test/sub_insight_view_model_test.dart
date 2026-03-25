@@ -43,7 +43,7 @@ void main() {
           Subscription(
             id: 'other-a',
             name: 'Legacy Service',
-            category: SubscriptionCategory.other,
+            category: SubscriptionCategory.others,
             price: 15000,
             currencyCode: 'NGN',
             billingCycle: SubscriptionBillingCycle.monthly,

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../app/router/route_names.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
+import '../../../../core/responsive/responsive_extension.dart';
 import '../../../profile/domain/models/profile.dart';
 import '../../../subscriptions/presentation/widgets/subscription_feature_widgets.dart';
 import '../../../subscriptions/presentation/widgets/subscription_primary_navigation.dart';
@@ -95,10 +96,10 @@ class SettingsScreen extends StatelessWidget {
                   onRefresh: viewModel.load,
                   child: ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 140),
+                    padding: context.pagePadding(top: 16, bottom: 140),
                     children: [
                       Text('Settings', style: AppTextStyles.sheetTitle),
-                      const SizedBox(height: 31),
+                      SizedBox(height: context.largeSectionGap + 1),
                       if (viewModel.errorMessage != null)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 16),
@@ -111,7 +112,7 @@ class SettingsScreen extends StatelessWidget {
                         profile: viewModel.profile,
                         onEdit: () => _openEditProfile(context),
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: context.sectionGap + 4),
                       _CenteredActionCard(
                         label: 'Buy me coffee',
                         icon: Icons.coffee_outlined,
@@ -119,9 +120,9 @@ class SettingsScreen extends StatelessWidget {
                         onTap: () =>
                             _showOfflineLinkNotice(context, 'Buy me coffee'),
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: context.sectionGap + 4),
                       const _SectionLabel(label: 'Preference'),
-                      const SizedBox(height: 12),
+                      SizedBox(height: context.sectionGap),
                       _SettingsSectionCard(
                         rows: [
                           _SettingsRow(
@@ -142,9 +143,9 @@ class SettingsScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: context.sectionGap + 4),
                       const _SectionLabel(label: 'Date & Security'),
-                      const SizedBox(height: 12),
+                      SizedBox(height: context.sectionGap),
                       _SettingsSectionCard(
                         rows: [
                           _SettingsRow(
@@ -167,9 +168,9 @@ class SettingsScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: context.sectionGap + 4),
                       const _SectionLabel(label: 'Legal'),
-                      const SizedBox(height: 12),
+                      SizedBox(height: context.sectionGap),
                       _SettingsSectionCard(
                         rows: [
                           _SettingsRow(
@@ -187,9 +188,9 @@ class SettingsScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: context.sectionGap + 4),
                       const _SectionLabel(label: 'App'),
-                      const SizedBox(height: 12),
+                      SizedBox(height: context.sectionGap),
                       const _SettingsSectionCard(
                         rows: [
                           _SettingsRow(
@@ -206,7 +207,7 @@ class SettingsScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 32),
+                      SizedBox(height: context.largeSectionGap + 2),
                       Center(
                         child: TextButton(
                           onPressed: () =>
@@ -397,7 +398,8 @@ class _SectionLabel extends StatelessWidget {
     return Text(
       label,
       style: AppTextStyles.bodyMuted.copyWith(
-        color: AppColors.textSecondary,
+        color: AppColors.textPrimary,
+        fontWeight: FontWeight.w500,
         letterSpacing: 0,
       ),
     );

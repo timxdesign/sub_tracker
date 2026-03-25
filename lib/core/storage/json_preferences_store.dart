@@ -1,28 +1,20 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../logging/app_logger.dart';
-import 'app_database_file_store.dart';
 
 class JsonPreferencesStore {
-  const JsonPreferencesStore(
-    this._preferences, {
-    AppDatabaseFileStore? databaseFileStore,
-  }) : _databaseFileStore = databaseFileStore;
+  const JsonPreferencesStore(this._preferences);
 
   final SharedPreferences _preferences;
-  final AppDatabaseFileStore? _databaseFileStore;
 
   Future<void> writeMap(String key, Map<String, dynamic> value) async {
     await _preferences.setString(key, jsonEncode(value));
-    await _syncDatabaseSnapshot();
   }
 
   Future<void> writeList(String key, List<Map<String, dynamic>> value) async {
     await _preferences.setString(key, jsonEncode(value));
-    await _syncDatabaseSnapshot();
   }
 
   Map<String, dynamic>? readMap(String key) {
@@ -76,28 +68,24 @@ class JsonPreferencesStore {
 
   Future<void> remove(String key) async {
     await _preferences.remove(key);
-    await _syncDatabaseSnapshot();
   }
 
   Future<void> removeMany(Iterable<String> keys) async {
     for (final key in keys) {
       await _preferences.remove(key);
     }
-    await _syncDatabaseSnapshot();
   }
 
   bool readBool(String key) => _preferences.getBool(key) ?? false;
 
   Future<void> writeBool(String key, bool value) async {
     await _preferences.setBool(key, value);
-    await _syncDatabaseSnapshot();
   }
 
   String? readString(String key) => _preferences.getString(key);
 
   Future<void> writeString(String key, String value) async {
     await _preferences.setString(key, value);
-    await _syncDatabaseSnapshot();
   }
 
   Map<String, dynamic> exportValues() {
@@ -125,42 +113,5 @@ class JsonPreferencesStore {
         await _preferences.setString(entry.key, value);
       }
     }
-    await _syncDatabaseSnapshot();
-  }
-
-  Future<File> writeDatabaseSnapshot() async {
-    final store = _databaseFileStore;
-    if (store == null) {
-      throw StateError('Database file store is not configured.');
-    }
-
-    return store.writeSnapshot(exportValues());
-  }
-
-  Future<File> exportDatabaseSnapshot() async {
-    final store = _databaseFileStore;
-    if (store == null) {
-      throw StateError('Database file store is not configured.');
-    }
-
-    return store.exportSnapshot(exportValues());
-  }
-
-  Future<Map<String, dynamic>> readDatabaseSnapshot(File file) async {
-    final store = _databaseFileStore;
-    if (store == null) {
-      throw StateError('Database file store is not configured.');
-    }
-
-    return store.readSnapshotFromFile(file);
-  }
-
-  Future<void> _syncDatabaseSnapshot() async {
-    final store = _databaseFileStore;
-    if (store == null) {
-      return;
-    }
-
-    await store.writeSnapshot(exportValues());
   }
 }

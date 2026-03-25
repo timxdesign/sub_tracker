@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/database/app_database.dart';
 import '../../core/network/app_endpoints.dart';
-import '../../core/storage/app_database_file_store.dart';
+import '../../core/storage/app_backup_file_store.dart';
 import '../../core/storage/json_preferences_store.dart';
+import '../../core/storage/legacy_preferences_migrator.dart';
 import '../../features/onboarding/data/datasources/onboarding_local_data_source.dart';
 import '../../features/onboarding/data/repositories/onboarding_repository_impl.dart';
 import '../../features/onboarding/domain/repositories/onboarding_repository.dart';
@@ -33,6 +37,7 @@ import '../../features/subscriptions/domain/usecases/save_subscription.dart';
 
 class AppDependencies {
   AppDependencies({
+    required this.appDatabase,
     required this.httpClient,
     required this.onboardingRepository,
     required this.profileRepository,
@@ -49,6 +54,7 @@ class AppDependencies {
     required this.saveSubscription,
   });
 
+  final AppDatabase appDatabase;
   final http.Client httpClient;
   final OnboardingRepository onboardingRepository;
   final ProfileRepository profileRepository;
@@ -74,25 +80,34 @@ class AppDependencies {
 
   void dispose() {
     profileRepository.dispose();
+    unawaited(appDatabase.close());
     httpClient.close();
   }
 }
 
-AppDependencies buildAppDependencies({
+Future<AppDependencies> buildAppDependencies({
   required SharedPreferences preferences,
   required http.Client httpClient,
-}) {
-  final store = JsonPreferencesStore(
-    preferences,
-    databaseFileStore: AppDatabaseFileStore(),
-  );
+  AppDatabase? appDatabase,
+  AppBackupFileStore? backupFileStore,
+}) async {
+  final store = JsonPreferencesStore(preferences);
+  final database = appDatabase ?? AppDatabase();
+  final profileLocalDataSource = ProfileLocalDataSource(database);
+  final subscriptionsLocalDataSource = SubscriptionsLocalDataSource(database);
+
+  await LegacyPreferencesMigrator(
+    store: store,
+    profileLocalDataSource: profileLocalDataSource,
+    subscriptionsLocalDataSource: subscriptionsLocalDataSource,
+  ).migrate();
 
   final onboardingRepository = OnboardingRepositoryImpl(
     localDataSource: OnboardingLocalDataSource(store),
   );
 
   final profileRepository = ProfileRepositoryImpl(
-    localDataSource: ProfileLocalDataSource(store),
+    localDataSource: profileLocalDataSource,
     remoteDataSource: ProfileRemoteDataSource(
       client: httpClient,
       endpoint: AppEndpoints.profileSync,
@@ -100,7 +115,7 @@ AppDependencies buildAppDependencies({
   );
 
   final subscriptionsRepository = SubscriptionsRepositoryImpl(
-    localDataSource: SubscriptionsLocalDataSource(store),
+    localDataSource: subscriptionsLocalDataSource,
     remoteDataSource: SubscriptionsRemoteDataSource(
       client: httpClient,
       endpoint: AppEndpoints.subscriptionsSync,
@@ -108,10 +123,16 @@ AppDependencies buildAppDependencies({
   );
 
   final settingsRepository = SettingsRepositoryImpl(
-    localDataSource: SettingsLocalDataSource(store),
+    localDataSource: SettingsLocalDataSource(
+      store: store,
+      backupFileStore: backupFileStore ?? AppBackupFileStore(),
+      profileLocalDataSource: profileLocalDataSource,
+      subscriptionsLocalDataSource: subscriptionsLocalDataSource,
+    ),
   );
 
   return AppDependencies(
+    appDatabase: database,
     httpClient: httpClient,
     onboardingRepository: onboardingRepository,
     profileRepository: profileRepository,

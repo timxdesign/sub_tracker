@@ -7,12 +7,16 @@ abstract final class AppAssets {
   static const receiptIllustration = 'assets/illustration/receipt_3d.svg';
   static const importIcon = 'assets/components/import.svg';
   static const scanQrIcon = 'assets/components/scanqr.svg';
+  static const backIcon = 'assets/components/Back.svg';
   static const closeIcon = 'assets/components/Close.svg';
   static const gridActive = 'assets/components/Grid_Active.svg';
   static const gridInactive = 'assets/components/Grid_Inactive.svg';
   static const listActive = 'assets/components/List_Active.svg';
   static const listInactive = 'assets/components/List_Inactive.svg';
   static const addIcon = 'assets/icons/Add.svg';
+  static const xIcon = 'assets/icons/X.svg';
+  static const editIcon = 'assets/icons/edit.svg';
+  static const closeCircleIcon = 'assets/icons/close circle.svg';
   static const dataPlanIcon = 'assets/icons/Data plan.svg';
   static const appsIcon = 'assets/icons/Apps.svg';
   static const toolsIcon = 'assets/icons/Tools.svg';

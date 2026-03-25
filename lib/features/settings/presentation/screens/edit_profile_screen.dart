@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
+import '../../../../core/responsive/responsive_extension.dart';
 import '../../../../core/widgets/app_screen.dart';
 import '../../../../core/widgets/phone_viewport.dart';
 import '../../../profile/presentation/widgets/profile_text_field.dart';
@@ -66,81 +67,89 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 children: [
                   const _SettingsSubpageHeader(title: 'Edit Profile'),
                   Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.fromLTRB(24, 26, 24, 32),
-                      children: [
-                        if (viewModel.screenError != null)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: Text(
-                              viewModel.screenError!,
-                              style: AppTextStyles.bodyMuted,
-                            ),
-                          ),
-                        SurfaceCard(
-                          radius: 24,
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            children: [
-                              ProfileTextField(
-                                label: 'Enter your name',
-                                controller: _nameController,
-                                focusNode: _nameFocusNode,
-                                hintText: 'John Doe',
-                                textCapitalization: TextCapitalization.words,
-                                textInputAction: TextInputAction.next,
-                                errorText: viewModel.nameError,
-                                onChanged: viewModel.updateName,
-                                onBlur: viewModel.markNameTouched,
-                                onSubmitted: (_) =>
-                                    _emailFocusNode.requestFocus(),
-                              ),
-                              const SizedBox(height: 26),
-                              ProfileTextField(
-                                label: 'Email address',
-                                controller: _emailController,
-                                focusNode: _emailFocusNode,
-                                hintText: 'example@gmail.com',
-                                keyboardType: TextInputType.emailAddress,
-                                textInputAction: TextInputAction.done,
-                                errorText: viewModel.emailError,
-                                onChanged: viewModel.updateEmail,
-                                onBlur: viewModel.markEmailTouched,
-                                onSubmitted: (_) => _handleSave(),
-                              ),
-                            ],
-                          ),
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: context.formContentMaxWidth ?? double.infinity,
                         ),
-                        const SizedBox(height: 30),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 56,
-                          child: FilledButton(
-                            onPressed: viewModel.isSaving ? null : _handleSave,
-                            style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.brandGreen,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(999),
+                        child: ListView(
+                          padding: context.pagePadding(top: 26, bottom: 32),
+                          children: [
+                            if (viewModel.screenError != null)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: Text(
+                                  viewModel.screenError!,
+                                  style: AppTextStyles.bodyMuted,
+                                ),
                               ),
-                              textStyle: AppTextStyles.body.copyWith(
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white,
-                                letterSpacing: -0.2,
+                            SurfaceCard(
+                              radius: 24,
+                              padding: const EdgeInsets.all(24),
+                              child: Column(
+                                children: [
+                                  ProfileTextField(
+                                    label: 'Enter your name',
+                                    controller: _nameController,
+                                    focusNode: _nameFocusNode,
+                                    hintText: 'John Doe',
+                                    textCapitalization: TextCapitalization.words,
+                                    textInputAction: TextInputAction.next,
+                                    errorText: viewModel.nameError,
+                                    onChanged: viewModel.updateName,
+                                    onBlur: viewModel.markNameTouched,
+                                    onSubmitted: (_) =>
+                                        _emailFocusNode.requestFocus(),
+                                  ),
+                                  const SizedBox(height: 26),
+                                  ProfileTextField(
+                                    label: 'Email address',
+                                    controller: _emailController,
+                                    focusNode: _emailFocusNode,
+                                    hintText: 'example@gmail.com',
+                                    keyboardType: TextInputType.emailAddress,
+                                    textInputAction: TextInputAction.done,
+                                    errorText: viewModel.emailError,
+                                    onChanged: viewModel.updateEmail,
+                                    onBlur: viewModel.markEmailTouched,
+                                    onSubmitted: (_) => _handleSave(),
+                                  ),
+                                ],
                               ),
                             ),
-                            child: viewModel.isSaving
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Text('Save Changes'),
-                          ),
+                            const SizedBox(height: 30),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 56,
+                              child: FilledButton(
+                                onPressed: viewModel.isSaving ? null : _handleSave,
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppColors.brandGreen,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  textStyle: AppTextStyles.body.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
+                                    letterSpacing: -0.2,
+                                  ),
+                                ),
+                                child: viewModel.isSaving
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : const Text('Save Changes'),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ],
@@ -160,12 +169,13 @@ class _SettingsSubpageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final horizontalPadding = context.pageHorizontalPadding;
     return Container(
       height: 64,
       color: Colors.white,
       child: Row(
         children: [
-          const SizedBox(width: 24),
+          SizedBox(width: horizontalPadding),
           InkWell(
             onTap: () => context.pop(),
             borderRadius: BorderRadius.circular(999),
@@ -185,7 +195,7 @@ class _SettingsSubpageHeader extends StatelessWidget {
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(right: 64),
+              padding: EdgeInsets.only(right: horizontalPadding + 40),
               child: Center(
                 child: Text(
                   title,

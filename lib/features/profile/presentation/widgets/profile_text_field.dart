@@ -41,16 +41,17 @@ class ProfileTextField extends StatelessWidget {
           onBlur?.call();
         }
       },
-      child: Builder(
-        builder: (context) {
+      child: AnimatedBuilder(
+        animation: Listenable.merge([controller, focusNode]),
+        builder: (context, child) {
           final hasValue = controller.text.trim().isNotEmpty;
           final hasError = errorText != null;
           final isFocused = focusNode.hasFocus;
           final borderColor = hasError
               ? AppColors.error
               : isFocused
-                  ? AppColors.brandGreen
-                  : Colors.transparent;
+              ? AppColors.brandGreen
+              : Colors.transparent;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,7 +64,10 @@ class ProfileTextField extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
                   border: Border(
-                    bottom: BorderSide(color: borderColor, width: 1),
+                    bottom: BorderSide(
+                      color: borderColor,
+                      width: isFocused || hasError ? 1 : 0,
+                    ),
                   ),
                 ),
                 child: TextField(
@@ -74,10 +78,10 @@ class ProfileTextField extends StatelessWidget {
                   textCapitalization: textCapitalization,
                   autofillHints: autofillHints,
                   autocorrect: false,
-                  enableSuggestions:
-                      keyboardType != TextInputType.emailAddress,
-                  cursorColor:
-                      hasError ? AppColors.error : AppColors.brandGreen,
+                  enableSuggestions: keyboardType != TextInputType.emailAddress,
+                  cursorColor: hasError
+                      ? AppColors.error
+                      : AppColors.brandGreen,
                   style: AppTextStyles.inputValue.copyWith(
                     color: hasValue
                         ? AppColors.textPrimary

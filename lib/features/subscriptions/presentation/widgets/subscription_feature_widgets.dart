@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/responsive/responsive_extension.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/app_screen.dart';
 import '../../../../core/widgets/phone_viewport.dart';
@@ -33,6 +34,8 @@ class SubscriptionShellScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final horizontalPadding = context.pageHorizontalPadding;
+    final bottomPadding = context.responsiveSpacing.navigationBottom;
     return AppScreen(
       backgroundColor: AppColors.background,
       child: PhoneViewport(
@@ -43,23 +46,36 @@ class SubscriptionShellScaffold extends StatelessWidget {
               alignment: Alignment.bottomCenter,
               child: SafeArea(
                 top: false,
-                minimum: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 208,
-                      height: 64,
-                      child: _BottomDock(
-                        destination: destination,
-                        onHomeTap: onHomeTap,
-                        onSubscriptionsTap: onSubscriptionsTap,
-                        onInsightsTap: onInsightsTap,
-                        onSettingsTap: onSettingsTap,
-                      ),
+                minimum: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  0,
+                  horizontalPadding,
+                  bottomPadding,
+                ),
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: context.primaryNavigationMaxWidth,
                     ),
-                    const Spacer(),
-                    _AddSubscriptionButton(onTap: onAddTap),
-                  ],
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 208,
+                          height: 64,
+                          child: _BottomDock(
+                            destination: destination,
+                            onHomeTap: onHomeTap,
+                            onSubscriptionsTap: onSubscriptionsTap,
+                            onInsightsTap: onInsightsTap,
+                            onSettingsTap: onSettingsTap,
+                          ),
+                        ),
+                        const Spacer(),
+                        _AddSubscriptionButton(onTap: onAddTap),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -604,7 +620,7 @@ String? _assetPathForCategory(SubscriptionCategory category) {
       return AppAssets.insuranceIcon;
     case SubscriptionCategory.identity:
       return AppAssets.identityIcon;
-    case SubscriptionCategory.other:
+    case SubscriptionCategory.others:
       return AppAssets.otherIcon;
     case SubscriptionCategory.vehicle:
       return null;
@@ -627,7 +643,7 @@ Color _accentColorForCategory(SubscriptionCategory category) {
       return const Color(0xFF466AF6);
     case SubscriptionCategory.identity:
       return const Color(0xFF8F2EFF);
-    case SubscriptionCategory.other:
+    case SubscriptionCategory.others:
       return const Color(0xFF677788);
   }
 }

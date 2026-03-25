@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sub_tracker/core/storage/json_preferences_store.dart';
+import 'package:sub_tracker/core/database/app_database.dart';
 import 'package:sub_tracker/features/profile/data/datasources/profile_local_data_source.dart';
 import 'package:sub_tracker/features/profile/data/datasources/profile_remote_data_source.dart';
 import 'package:sub_tracker/features/profile/data/repositories/profile_repository_impl.dart';
@@ -12,37 +12,38 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  test('stores a created profile locally and queues it for submission', () async {
-    final preferences = await SharedPreferences.getInstance();
-    final repository = ProfileRepositoryImpl(
-      localDataSource: ProfileLocalDataSource(
-        JsonPreferencesStore(preferences),
-      ),
-      remoteDataSource: ProfileRemoteDataSource(
-        client: MockClient((request) async => http.Response('', 200)),
-        endpoint: 'https://example.com/forms/profile',
-      ),
-    );
+  test(
+    'stores a created profile locally and queues it for submission',
+    () async {
+      final database = AppDatabase.inMemory();
+      final repository = ProfileRepositoryImpl(
+        localDataSource: ProfileLocalDataSource(database),
+        remoteDataSource: ProfileRemoteDataSource(
+          client: MockClient((request) async => http.Response('', 200)),
+          endpoint: 'https://example.com/forms/profile',
+        ),
+      );
 
-    await repository.createProfile(
-      fullName: 'John Doe',
-      email: 'john@example.com',
-    );
+      await repository.createProfile(
+        fullName: 'John Doe',
+        email: 'john@example.com',
+      );
 
-    final storedProfile = await repository.getStoredProfile();
-    final pendingProfile = await repository.getPendingProfile();
+      final storedProfile = await repository.getStoredProfile();
+      final pendingProfile = await repository.getPendingProfile();
 
-    expect(storedProfile?.fullName, 'John Doe');
-    expect(storedProfile?.email, 'john@example.com');
-    expect(pendingProfile?.email, 'john@example.com');
-  });
+      expect(storedProfile?.fullName, 'John Doe');
+      expect(storedProfile?.email, 'john@example.com');
+      expect(pendingProfile?.email, 'john@example.com');
+
+      await database.close();
+    },
+  );
 
   test('clears queued submissions after a successful form post', () async {
-    final preferences = await SharedPreferences.getInstance();
+    final database = AppDatabase.inMemory();
     final repository = ProfileRepositoryImpl(
-      localDataSource: ProfileLocalDataSource(
-        JsonPreferencesStore(preferences),
-      ),
+      localDataSource: ProfileLocalDataSource(database),
       remoteDataSource: ProfileRemoteDataSource(
         client: MockClient((request) async => http.Response('', 200)),
         endpoint: 'https://example.com/forms/profile',
@@ -56,14 +57,14 @@ void main() {
     await repository.syncPendingProfile();
 
     expect(await repository.getPendingProfile(), isNull);
+
+    await database.close();
   });
 
   test('keeps queued submissions when the form post fails', () async {
-    final preferences = await SharedPreferences.getInstance();
+    final database = AppDatabase.inMemory();
     final repository = ProfileRepositoryImpl(
-      localDataSource: ProfileLocalDataSource(
-        JsonPreferencesStore(preferences),
-      ),
+      localDataSource: ProfileLocalDataSource(database),
       remoteDataSource: ProfileRemoteDataSource(
         client: MockClient((request) async => http.Response('', 503)),
         endpoint: 'https://example.com/forms/profile',
@@ -77,5 +78,7 @@ void main() {
     await repository.syncPendingProfile();
 
     expect(await repository.getPendingProfile(), isNotNull);
+
+    await database.close();
   });
 }

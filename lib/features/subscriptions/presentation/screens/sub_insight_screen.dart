@@ -9,6 +9,7 @@ import '../../../../app/router/route_names.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/responsive/responsive_extension.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../settings/presentation/viewmodels/app_preferences_controller.dart';
 import '../../domain/models/subscription.dart';
@@ -56,7 +57,7 @@ class SubInsightScreen extends StatelessWidget {
         context.watch<AppPreferencesController?>()?.currencyCode ?? 'NGN';
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 120),
+      padding: context.pagePadding(top: 16, bottom: 120),
       children: [
         Row(
           children: [
@@ -72,7 +73,7 @@ class SubInsightScreen extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: context.sectionGap + 4),
         if (viewModel.isLoading && !viewModel.hasSubscriptions)
           const Padding(
             padding: EdgeInsets.only(top: 24),
@@ -88,38 +89,65 @@ class SubInsightScreen extends StatelessWidget {
               ),
             ),
           if (!viewModel.hasSubscriptions)
-            const SizedBox(
-              height: 560,
-              child: Center(child: _InsightEmptyState()),
+            Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: context.isCompact ? 64 : 96,
+              ),
+              child: const Center(child: _InsightEmptyState()),
             )
           else ...[
             _SpentSummaryCard(viewModel: viewModel, currencyCode: currencyCode),
-            const SizedBox(height: 12),
+            SizedBox(height: context.sectionGap),
             _InsightChartCard(viewModel: viewModel),
-            const SizedBox(height: 12),
+            SizedBox(height: context.sectionGap),
             _CategoryBreakdownCard(viewModel: viewModel),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _InsightMetricCard(
-                    value:
-                        '+${formatTwoDigits(viewModel.newSubscriptionsCount)}',
-                    label: 'New Sub',
-                    accentColor: const Color(0xFF54D62C),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _InsightMetricCard(
-                    value: formatTwoDigits(
-                      viewModel.cancelledSubscriptionsCount,
+            SizedBox(height: context.sectionGap),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                if (constraints.maxWidth < 340) {
+                  return Column(
+                    children: [
+                      _InsightMetricCard(
+                        value:
+                            '+${formatTwoDigits(viewModel.newSubscriptionsCount)}',
+                        label: 'New Sub',
+                        accentColor: const Color(0xFF54D62C),
+                      ),
+                      SizedBox(height: context.sectionGap),
+                      _InsightMetricCard(
+                        value: formatTwoDigits(
+                          viewModel.cancelledSubscriptionsCount,
+                        ),
+                        label: 'Cancelled sub',
+                        accentColor: AppColors.error,
+                      ),
+                    ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    Expanded(
+                      child: _InsightMetricCard(
+                        value:
+                            '+${formatTwoDigits(viewModel.newSubscriptionsCount)}',
+                        label: 'New Sub',
+                        accentColor: const Color(0xFF54D62C),
+                      ),
                     ),
-                    label: 'Cancelled sub',
-                    accentColor: AppColors.error,
-                  ),
-                ),
-              ],
+                    SizedBox(width: context.sectionGap),
+                    Expanded(
+                      child: _InsightMetricCard(
+                        value: formatTwoDigits(
+                          viewModel.cancelledSubscriptionsCount,
+                        ),
+                        label: 'Cancelled sub',
+                        accentColor: AppColors.error,
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ],
@@ -267,51 +295,64 @@ class _InsightChartCard extends StatelessWidget {
         .toList(growable: false);
 
     return SizedBox(
-      height: 265,
+      height: context.isCompact ? 248 : 265,
       child: SurfaceCard(
         radius: 16,
         padding: EdgeInsets.zero,
-        child: Stack(
-          children: [
-            Center(
-              child: SizedBox.square(
-                dimension: 224,
-                child: CustomPaint(
-                  painter: _InsightDonutPainter(segments: segments),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final chartSize = math.min(224.0, constraints.maxWidth - 48);
+
+            return Stack(
+              children: [
+                Center(
+                  child: SizedBox.square(
+                    dimension: chartSize,
+                    child: CustomPaint(
+                      painter: _InsightDonutPainter(segments: segments),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            if (topCategory != null)
-              Positioned(
-                left: 42,
-                top: 34,
-                child: _TopCategoryBadge(summary: topCategory),
-              ),
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Total sub',
-                    style: AppTextStyles.smallLabel.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textTertiary,
-                      letterSpacing: -0.2,
+                if (topCategory != null)
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        context.isCompact ? 12 : 16,
+                        20,
+                        0,
+                        0,
+                      ),
+                      child: _TopCategoryBadge(summary: topCategory),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    viewModel.totalSubscriptions.toString(),
-                    style: AppTextStyles.screenTitle.copyWith(
-                      fontSize: 28,
-                      height: 1.2,
-                      letterSpacing: -0.28,
-                    ),
+                Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Total sub',
+                        style: AppTextStyles.smallLabel.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textTertiary,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        viewModel.totalSubscriptions.toString(),
+                        style: AppTextStyles.screenTitle.copyWith(
+                          fontSize: 28,
+                          height: 1.2,
+                          letterSpacing: -0.28,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-          ],
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -367,18 +408,29 @@ class _CategoryBreakdownCard extends StatelessWidget {
     final leftColumn = summaries.take(4).toList(growable: false);
     final rightColumn = summaries.skip(4).toList(growable: false);
 
-    return SizedBox(
-      height: 168,
-      child: SurfaceCard(
-        radius: 16,
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Expanded(child: _CategoryBreakdownColumn(summaries: leftColumn)),
-            const SizedBox(width: 27),
-            Expanded(child: _CategoryBreakdownColumn(summaries: rightColumn)),
-          ],
-        ),
+    return SurfaceCard(
+      radius: 16,
+      padding: const EdgeInsets.all(16),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 300) {
+            return Column(
+              children: [
+                _CategoryBreakdownColumn(summaries: leftColumn),
+                SizedBox(height: context.sectionGap),
+                _CategoryBreakdownColumn(summaries: rightColumn),
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              Expanded(child: _CategoryBreakdownColumn(summaries: leftColumn)),
+              SizedBox(width: context.isCompact ? 16 : 27),
+              Expanded(child: _CategoryBreakdownColumn(summaries: rightColumn)),
+            ],
+          );
+        },
       ),
     );
   }
@@ -593,7 +645,7 @@ const _donutOrder = <SubscriptionCategory>[
   SubscriptionCategory.identity,
   SubscriptionCategory.vehicle,
   SubscriptionCategory.insurance,
-  SubscriptionCategory.other,
+  SubscriptionCategory.others,
   SubscriptionCategory.health,
 ];
 
@@ -613,13 +665,13 @@ Color _insightColorForCategory(SubscriptionCategory category) {
       return const Color(0xFF3D66F6);
     case SubscriptionCategory.identity:
       return const Color(0xFF8F2EFF);
-    case SubscriptionCategory.other:
+    case SubscriptionCategory.others:
       return const Color(0xFF6B7B8E);
   }
 }
 
 String _insightCategoryLabel(SubscriptionCategory category) {
-  if (category == SubscriptionCategory.other) {
+  if (category == SubscriptionCategory.others) {
     return 'Others';
   }
   return category.label;

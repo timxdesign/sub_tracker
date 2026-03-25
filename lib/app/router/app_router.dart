@@ -1,7 +1,8 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../app/theme/app_colors.dart';
 import '../../features/onboarding/presentation/screens/get_started_screen.dart';
 import '../../features/onboarding/presentation/screens/splash_screen.dart';
 import '../../features/onboarding/presentation/viewmodels/get_started_view_model.dart';
@@ -80,14 +81,17 @@ GoRouter createAppRouter(AppDependencies dependencies) {
         path: '/subscriptions/details/:id',
         name: AppRouteNames.subscriptionDetails,
         parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final subscriptionId = state.pathParameters['id']!;
-          return ChangeNotifierProvider(
-            create: (_) => SubscriptionDetailsViewModel(
-              getSubscription: dependencies.getSubscription,
-              saveSubscription: dependencies.saveSubscription,
-            )..load(subscriptionId),
-            child: const SubscriptionDetailsScreen(),
+          return _ModalBottomSheetPage<void>(
+            key: state.pageKey,
+            child: ChangeNotifierProvider(
+              create: (_) => SubscriptionDetailsViewModel(
+                getSubscription: dependencies.getSubscription,
+                saveSubscription: dependencies.saveSubscription,
+              )..load(subscriptionId),
+              child: const SubscriptionDetailsScreen(),
+            ),
           );
         },
       ),
@@ -249,4 +253,26 @@ GoRouter createAppRouter(AppDependencies dependencies) {
       ),
     ],
   );
+}
+
+class _ModalBottomSheetPage<T> extends Page<T> {
+  const _ModalBottomSheetPage({required this.child, super.key});
+
+  final Widget child;
+
+  @override
+  Route<T> createRoute(BuildContext context) {
+    return ModalBottomSheetRoute<T>(
+      settings: this,
+      isScrollControlled: true,
+      showDragHandle: false,
+      useSafeArea: false,
+      isDismissible: true,
+      enableDrag: true,
+      backgroundColor: Colors.transparent,
+      modalBarrierColor: AppColors.overlayScrim,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      builder: (context) => child,
+    );
+  }
 }

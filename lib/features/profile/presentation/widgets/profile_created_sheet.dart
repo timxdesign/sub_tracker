@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
+import '../../../../core/constants/app_assets.dart';
 
 Future<void> showProfileCreatedSheet(BuildContext context) async {
   final navigator = Navigator.of(context, rootNavigator: true);
@@ -51,33 +53,30 @@ class _ProfileCreatedSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.background,
+      color: AppColors.backgroundAlt,
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       clipBehavior: Clip.antiAlias,
       child: SizedBox(
+        key: const Key('profile-created-sheet'),
         width: double.infinity,
         height: 260,
         child: Padding(
           padding: const EdgeInsets.only(top: 84),
           child: Column(
             children: [
-              Container(
-                width: 39.26,
-                height: 39.26,
-                decoration: const BoxDecoration(
-                  color: AppColors.brandGreen,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.check_rounded,
-                  size: 24,
-                  color: Colors.white,
-                ),
+              SvgPicture.asset(
+                AppAssets.checkCircleIcon,
+                width: 51.26,
+                height: 51.26,
               ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Profile created',
-                style: AppTextStyles.successLabel,
+                style: AppTextStyles.sectionTitle.copyWith(
+                  fontSize: 20,
+                  height: 28 / 20,
+                  letterSpacing: -0.3,
+                ),
               ),
             ],
           ),

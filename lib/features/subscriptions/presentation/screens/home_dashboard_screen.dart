@@ -7,6 +7,7 @@ import '../../../../app/router/route_names.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/responsive/responsive_extension.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../settings/presentation/viewmodels/app_preferences_controller.dart';
 import '../../domain/models/subscription.dart';
@@ -65,10 +66,10 @@ class HomeDashboardScreen extends StatelessWidget {
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 120),
+      padding: context.pagePadding(top: 16, bottom: 120),
       children: [
         _DashboardHeader(firstName: viewModel.firstName),
-        const SizedBox(height: 18),
+        SizedBox(height: context.sectionGap + 6),
         if (viewModel.isLoading)
           const Padding(
             padding: EdgeInsets.only(bottom: 16),
@@ -108,7 +109,7 @@ class HomeDashboardScreen extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: context.sectionGap),
         SurfaceCard(
           radius: 24,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -166,13 +167,13 @@ class HomeDashboardScreen extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 22),
+        SizedBox(height: context.mediumSectionGap),
         SectionHeader(
           title: 'Subscriptions',
           actionLabel: 'View all',
           onTap: () => primaryNavigation.goSubscriptions(reset: true),
         ),
-        const SizedBox(height: 14),
+        SizedBox(height: context.sectionGap + 2),
         Row(
           children: categoryPreview
               .asMap()
@@ -198,13 +199,13 @@ class HomeDashboardScreen extends StatelessWidget {
               })
               .toList(growable: false),
         ),
-        const SizedBox(height: 22),
+        SizedBox(height: context.mediumSectionGap),
         SectionHeader(
           title: 'Upcoming payment',
           actionLabel: 'View all',
           onTap: () => context.push(AppRoutes.upcoming),
         ),
-        const SizedBox(height: 14),
+        SizedBox(height: context.sectionGap + 2),
         if (viewModel.upcomingPreview.isEmpty)
           const EmptyStateCard(
             assetPath: AppAssets.receiptIllustration,

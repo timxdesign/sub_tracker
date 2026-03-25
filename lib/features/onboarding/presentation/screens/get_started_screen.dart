@@ -9,6 +9,7 @@ import '../../../../app/router/route_names.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/responsive/responsive_extension.dart';
 import '../../../../core/widgets/app_screen.dart';
 import '../../../../core/widgets/phone_viewport.dart';
 import '../../../settings/presentation/widgets/import_existing_profile_sheet.dart';
@@ -50,21 +51,27 @@ class GetStartedScreen extends StatelessWidget {
               );
 
               return SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 54.5, 24, 24),
+                padding: context.pagePadding(top: 54.5, bottom: 24),
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: availableHeight),
+                  constraints: BoxConstraints(
+                    minHeight: availableHeight,
+                    maxWidth: context.formContentMaxWidth ?? double.infinity,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(
-                        width: 342,
+                      const ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: 342),
                         child: AnimatedShowcaseSection(
                           cardAssets: AppAssets.onboardingCards,
                           logoAssets: AppAssets.onboardingLogos,
                         ),
                       ),
                       const SizedBox(height: 54.5),
-                      const SizedBox(width: 342, child: DashedDivider()),
+                      const ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: 342),
+                        child: DashedDivider(),
+                      ),
                       const SizedBox(height: 51.5),
                       SvgPicture.asset(
                         AppAssets.chartIllustration,
@@ -72,24 +79,9 @@ class GetStartedScreen extends StatelessWidget {
                         height: 90,
                       ),
                       const SizedBox(height: 16),
-                      SizedBox(
-                        width: 223,
-                        child: Text.rich(
-                          TextSpan(
-                            children: [
-                              const TextSpan(
-                                text: 'All-in-one\nSubscription\n',
-                              ),
-                              TextSpan(
-                                text: 'Tracker',
-                                style: AppTextStyles.heroTitle.copyWith(
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ],
-                          ),
-                          style: AppTextStyles.heroTitle,
-                        ),
+                      const ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: 223),
+                        child: _HeroTitle(),
                       ),
                       SizedBox(height: buttonSpacing),
                       SizedBox(
@@ -145,6 +137,28 @@ class GetStartedScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _HeroTitle extends StatelessWidget {
+  const _HeroTitle();
+
+  @override
+  Widget build(BuildContext context) {
+    return Text.rich(
+      TextSpan(
+        children: [
+          const TextSpan(text: 'All-in-one\nSubscription\n'),
+          TextSpan(
+            text: 'Tracker',
+            style: AppTextStyles.heroTitle.copyWith(
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+      style: AppTextStyles.heroTitle,
     );
   }
 }

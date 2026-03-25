@@ -20,11 +20,8 @@ class SubscriptionFormViewModel extends ChangeNotifier {
   String _website = '';
   String _description = '';
   SubscriptionBillingCycle _billingCycle = SubscriptionBillingCycle.monthly;
-  DateTime _startDate = DateTime.now();
-  DateTime _nextBillingDate = _defaultNextBillingDate(
-    startDate: DateTime.now(),
-    billingCycle: SubscriptionBillingCycle.monthly,
-  );
+  DateTime? _startDate;
+  DateTime? _nextBillingDate;
   bool _hasCustomBillingDate = false;
   bool _isSubmitting = false;
   bool _showErrors = false;
@@ -37,9 +34,24 @@ class SubscriptionFormViewModel extends ChangeNotifier {
   String get website => _website;
   String get description => _description;
   SubscriptionBillingCycle get billingCycle => _billingCycle;
-  DateTime get startDate => _startDate;
-  DateTime get nextBillingDate => _nextBillingDate;
+  DateTime? get startDate => _startDate;
+  DateTime? get nextBillingDate => _nextBillingDate;
   bool get isSubmitting => _isSubmitting;
+  bool get canSubmit => _isFormValid;
+
+  bool get _isFormValid {
+    final amount = _parseAmount(_price);
+    final startDate = _startDate;
+    final billingDate = _nextBillingDate;
+
+    return _name.trim().isNotEmpty &&
+        _category != null &&
+        amount != null &&
+        amount > 0 &&
+        startDate != null &&
+        billingDate != null &&
+        !billingDate.isBefore(startDate);
+  }
 
   String? get nameError =>
       _showErrors && _name.trim().isEmpty ? 'Enter a subscription name' : null;
@@ -55,6 +67,27 @@ class SubscriptionFormViewModel extends ChangeNotifier {
     final amount = _parseAmount(_price);
     if (amount == null || amount <= 0) {
       return 'Enter a valid amount';
+    }
+
+    return null;
+  }
+
+  String? get startDateError =>
+      _showErrors && _startDate == null ? 'Select a start date' : null;
+
+  String? get nextBillingDateError {
+    if (!_showErrors) {
+      return null;
+    }
+
+    final billingDate = _nextBillingDate;
+    if (billingDate == null) {
+      return 'Enter a billing date';
+    }
+
+    final startDate = _startDate;
+    if (startDate != null && billingDate.isBefore(startDate)) {
+      return 'Billing date must be after start date';
     }
 
     return null;
@@ -92,12 +125,11 @@ class SubscriptionFormViewModel extends ChangeNotifier {
 
   void updateBillingCycle(SubscriptionBillingCycle value) {
     _billingCycle = value;
-    if (!_hasCustomBillingDate) {
-      _nextBillingDate = _defaultNextBillingDate(
-        startDate: _startDate,
-        billingCycle: value,
-      );
-    }
+    _hasCustomBillingDate = false;
+    _nextBillingDate = _defaultNextBillingDate(
+      startDate: _startDate,
+      billingCycle: value,
+    );
     notifyListeners();
   }
 
@@ -108,6 +140,9 @@ class SubscriptionFormViewModel extends ChangeNotifier {
         startDate: value,
         billingCycle: _billingCycle,
       );
+    } else if (_nextBillingDate != null && _nextBillingDate!.isBefore(value)) {
+      _nextBillingDate = null;
+      _hasCustomBillingDate = false;
     }
     notifyListeners();
   }
@@ -122,11 +157,7 @@ class SubscriptionFormViewModel extends ChangeNotifier {
     _showErrors = true;
     notifyListeners();
 
-    final amount = _parseAmount(_price);
-    if (_name.trim().isEmpty ||
-        _category == null ||
-        amount == null ||
-        amount <= 0) {
+    if (!_isFormValid) {
       return null;
     }
 
@@ -138,6 +169,7 @@ class SubscriptionFormViewModel extends ChangeNotifier {
     notifyListeners();
 
     final normalizedName = _name.trim();
+    final amount = _parseAmount(_price)!;
     final subscriptionId =
         '${DateTime.now().microsecondsSinceEpoch}-${normalizedName.toLowerCase().replaceAll(' ', '-')}';
 
@@ -150,7 +182,7 @@ class SubscriptionFormViewModel extends ChangeNotifier {
           price: amount,
           currencyCode: _defaultCurrencyCode,
           billingCycle: _billingCycle,
-          nextBillingDate: _nextBillingDate,
+          nextBillingDate: _nextBillingDate!,
           createdAt: DateTime.now(),
           startDate: _startDate,
           serviceProvider: _serviceProvider.trim(),
@@ -171,14 +203,18 @@ double? _parseAmount(String value) {
   return double.tryParse(sanitized);
 }
 
-DateTime _defaultNextBillingDate({
-  required DateTime startDate,
+DateTime? _defaultNextBillingDate({
+  required DateTime? startDate,
   required SubscriptionBillingCycle billingCycle,
 }) {
+  if (startDate == null) {
+    return null;
+  }
+
   return switch (billingCycle) {
     SubscriptionBillingCycle.monthly => billingCycle.advanceDate(startDate),
     SubscriptionBillingCycle.yearly => billingCycle.advanceDate(startDate),
-    SubscriptionBillingCycle.custom => startDate.add(const Duration(days: 30)),
+    SubscriptionBillingCycle.custom => null,
     SubscriptionBillingCycle.lifetime => startDate,
   };
 }

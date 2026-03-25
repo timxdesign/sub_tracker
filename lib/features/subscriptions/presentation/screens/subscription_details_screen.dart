@@ -1,14 +1,13 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/utils/formatters.dart';
-import '../../../../core/widgets/app_screen.dart';
-import '../../../../core/widgets/phone_viewport.dart';
 import '../../domain/models/subscription.dart';
 import '../viewmodels/subscription_details_view_model.dart';
 import '../widgets/subscription_feature_widgets.dart';
@@ -26,19 +25,8 @@ class SubscriptionDetailsScreen extends StatefulWidget {
 class _SubscriptionDetailsScreenState extends State<SubscriptionDetailsScreen> {
   _SubscriptionDetailsTab _selectedTab = _SubscriptionDetailsTab.info;
 
-  Future<void> _handleRenew(SubscriptionDetailsViewModel viewModel) async {
-    final previousDate = viewModel.subscription?.nextBillingDate;
-    await viewModel.renew();
-    if (!mounted || previousDate == null) {
-      return;
-    }
-
-    final updatedDate = viewModel.subscription?.nextBillingDate;
-    if (updatedDate != null && !updatedDate.isAtSameMomentAs(previousDate)) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Subscription renewed')));
-    }
+  void _closeSheet() {
+    Navigator.of(context, rootNavigator: true).maybePop();
   }
 
   void _showEditNotice() {
@@ -52,34 +40,51 @@ class _SubscriptionDetailsScreenState extends State<SubscriptionDetailsScreen> {
     return Consumer<SubscriptionDetailsViewModel>(
       builder: (context, viewModel, _) {
         final subscription = viewModel.subscription;
+        final mediaQuery = MediaQuery.of(context);
+        final sheetHeight = math.min(mediaQuery.size.height - 16, 751.0);
+        final bottomSpacing = mediaQuery.padding.bottom > 0
+            ? mediaQuery.padding.bottom + 3
+            : 37.0;
+        const sheetBackgroundColor = Color(0xFFF9FAFB);
 
-        return AppScreen(
-          backgroundColor: AppColors.background,
-          child: PhoneViewport(
-            child: SafeArea(
-              bottom: false,
-              child: DecoratedBox(
-                decoration: const BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 390),
+            child: SizedBox(
+              width: double.infinity,
+              height: sheetHeight,
+              child: Material(
+                key: const ValueKey('subscription-details-overlay'),
+                color: sheetBackgroundColor,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
                 ),
+                clipBehavior: Clip.antiAlias,
                 child: Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 18, 24, 0),
+                      padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
                       child: Row(
                         children: [
-                          Text(
-                            'Details',
-                            style: AppTextStyles.sectionTitle.copyWith(
-                              fontSize: 20,
-                              height: 28 / 20,
-                              letterSpacing: -1,
+                          Expanded(
+                            child: Text(
+                              'Details',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.sectionTitle.copyWith(
+                                fontSize: 20,
+                                height: 28 / 20,
+                                letterSpacing: -0.3,
+                              ),
                             ),
                           ),
-                          const Spacer(),
+                          const SizedBox(width: 16),
                           InkWell(
-                            onTap: () => context.pop(),
+                            key: const ValueKey(
+                              'subscription-details-close-button',
+                            ),
+                            onTap: _closeSheet,
                             borderRadius: BorderRadius.circular(999),
                             child: Ink(
                               width: 40,
@@ -90,7 +95,7 @@ class _SubscriptionDetailsScreenState extends State<SubscriptionDetailsScreen> {
                               ),
                               child: Center(
                                 child: SvgPicture.asset(
-                                  AppAssets.closeIcon,
+                                  AppAssets.xIcon,
                                   width: 20,
                                   height: 20,
                                 ),
@@ -101,7 +106,7 @@ class _SubscriptionDetailsScreenState extends State<SubscriptionDetailsScreen> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
                       child: Row(
                         children: [
                           Expanded(
@@ -152,58 +157,13 @@ class _SubscriptionDetailsScreenState extends State<SubscriptionDetailsScreen> {
                           }
 
                           return ListView(
-                            padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+                            padding: EdgeInsets.fromLTRB(
+                              24,
+                              24,
+                              24,
+                              bottomSpacing,
+                            ),
                             children: [
-                              if (_selectedTab ==
-                                      _SubscriptionDetailsTab.info &&
-                                  _showsRenewAction(subscription)) ...[
-                                SizedBox(
-                                  height: 56,
-                                  child: FilledButton(
-                                    onPressed: viewModel.isUpdating
-                                        ? null
-                                        : () => _handleRenew(viewModel),
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: AppColors.brandGreen,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                    ),
-                                    child: viewModel.isUpdating
-                                        ? const SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              color: Colors.white,
-                                            ),
-                                          )
-                                        : Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              SvgPicture.asset(
-                                                AppAssets.checkCircleIcon,
-                                                width: 20,
-                                                height: 20,
-                                              ),
-                                              const SizedBox(width: 10),
-                                              Text(
-                                                'I have renewed',
-                                                style: AppTextStyles.body
-                                                    .copyWith(
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      color: Colors.white,
-                                                      letterSpacing: -0.2,
-                                                    ),
-                                              ),
-                                            ],
-                                          ),
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                              ],
                               SurfaceCard(
                                 radius: 24,
                                 padding: const EdgeInsets.all(24),
@@ -233,6 +193,30 @@ class _SubscriptionDetailsScreenState extends State<SubscriptionDetailsScreen> {
                                 ..._buildInfoContent(subscription)
                               else
                                 _SummaryCard(subscription: subscription),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _DetailsActionButton(
+                                      label: 'Edit',
+                                      assetPath: AppAssets.editIcon,
+                                      foregroundColor: AppColors.textPrimary,
+                                      backgroundColor: Colors.white,
+                                      onTap: _showEditNotice,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: _DetailsActionButton(
+                                      label: 'Cancel',
+                                      assetPath: AppAssets.closeCircleIcon,
+                                      foregroundColor: AppColors.error,
+                                      backgroundColor: const Color(0x1AFF4842),
+                                      onTap: _closeSheet,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ],
                           );
                         },
@@ -297,30 +281,6 @@ class _SubscriptionDetailsScreenState extends State<SubscriptionDetailsScreen> {
           ],
         ),
       ),
-      const SizedBox(height: 16),
-      Row(
-        children: [
-          Expanded(
-            child: _DetailsActionButton(
-              label: 'Edit',
-              icon: Icons.edit_outlined,
-              foregroundColor: AppColors.textPrimary,
-              backgroundColor: Colors.white,
-              onTap: _showEditNotice,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: _DetailsActionButton(
-              label: 'Cancel',
-              icon: Icons.cancel_outlined,
-              foregroundColor: AppColors.error,
-              backgroundColor: const Color(0x1AFF4842),
-              onTap: () => context.pop(),
-            ),
-          ),
-        ],
-      ),
     ];
   }
 
@@ -334,10 +294,6 @@ class _SubscriptionDetailsScreenState extends State<SubscriptionDetailsScreen> {
     }
 
     return _DetailsPill(label: trimmed);
-  }
-
-  bool _showsRenewAction(Subscription subscription) {
-    return subscription.expiresToday || subscription.isExpired;
   }
 }
 
@@ -504,14 +460,14 @@ class _StatusPill extends StatelessWidget {
 class _DetailsActionButton extends StatelessWidget {
   const _DetailsActionButton({
     required this.label,
-    required this.icon,
+    required this.assetPath,
     required this.foregroundColor,
     required this.backgroundColor,
     required this.onTap,
   });
 
   final String label;
-  final IconData icon;
+  final String assetPath;
   final Color foregroundColor;
   final Color backgroundColor;
   final VoidCallback onTap;
@@ -530,7 +486,7 @@ class _DetailsActionButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 20, color: foregroundColor),
+            SvgPicture.asset(assetPath, width: 20, height: 20),
             const SizedBox(width: 10),
             Text(
               label,

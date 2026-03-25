@@ -9,7 +9,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final preferences = await SharedPreferences.getInstance();
-  final dependencies = buildAppDependencies(
+  final dependencies = await buildAppDependencies(
     preferences: preferences,
     httpClient: http.Client(),
   );

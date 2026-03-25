@@ -3,9 +3,9 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
-class AppDatabaseFileStore {
-  AppDatabaseFileStore({
-    this.backupFileName = 'subscription_tracker.db',
+class AppBackupFileStore {
+  AppBackupFileStore({
+    this.backupFileName = 'subscription_tracker_backup.json',
     Future<Directory> Function()? appSupportDirectory,
     Future<Directory?> Function()? downloadsDirectory,
   }) : _appSupportDirectory =

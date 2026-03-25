@@ -7,6 +7,7 @@ import '../../../../app/router/route_names.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/responsive/responsive_extension.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../domain/models/subscription.dart';
 import '../viewmodels/subscriptions_view_model.dart';
@@ -77,12 +78,12 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
   Widget _buildBody(BuildContext context, SubscriptionsViewModel viewModel) {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 120),
+      padding: context.pagePadding(top: 16, bottom: 120),
       children: [
         Row(
           children: [
             Expanded(
-              child: Text('Subscriptions', style: AppTextStyles.screenTitle),
+              child: Text('Subscriptions', style: AppTextStyles.sheetTitle),
             ),
             _ModeToggle(
               isSelected: viewModel.isGridMode,
@@ -114,7 +115,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 22),
+        SizedBox(height: context.mediumSectionGap),
         if (viewModel.isLoading)
           const Padding(
             padding: EdgeInsets.only(bottom: 16),
@@ -166,12 +167,12 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: context.sectionGap + 4),
           SubscriptionSearchField(
             controller: _searchController,
             onChanged: viewModel.updateSearchQuery,
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: context.sectionGap + 8),
           if (viewModel.groupedSubscriptions.isEmpty)
             const EmptyStateCard(
               assetPath: AppAssets.receiptIllustration,
@@ -207,11 +208,11 @@ class _CategoryGrid extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: summaries.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 1.27,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: context.subscriptionGridColumnCount,
+        mainAxisSpacing: context.sectionGap,
+        crossAxisSpacing: context.sectionGap,
+        childAspectRatio: context.isExpanded ? 1.08 : 1.27,
       ),
       itemBuilder: (context, index) {
         final summary = summaries[index];

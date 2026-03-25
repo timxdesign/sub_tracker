@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
+import '../../../../core/responsive/responsive_extension.dart';
 import '../../../../core/widgets/app_screen.dart';
 import '../../../../core/widgets/phone_viewport.dart';
 import '../../../subscriptions/presentation/widgets/subscription_feature_widgets.dart';
@@ -19,27 +20,36 @@ class TermsAndConditionsScreen extends StatelessWidget {
             children: [
               const _TermsHeader(),
               Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(24, 26, 24, 32),
-                  children: [
-                    SurfaceCard(
-                      radius: 24,
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: _sections
-                            .map(
-                              (section) => Padding(
-                                padding: EdgeInsets.only(
-                                  bottom: section == _sections.last ? 0 : 16,
-                                ),
-                                child: _TermsSection(section: section),
-                              ),
-                            )
-                            .toList(growable: false),
-                      ),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: context.formContentMaxWidth ?? double.infinity,
                     ),
-                  ],
+                    child: ListView(
+                      padding: context.pagePadding(top: 26, bottom: 32),
+                      children: [
+                        SurfaceCard(
+                          radius: 24,
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: _sections
+                                .map(
+                                  (section) => Padding(
+                                    padding: EdgeInsets.only(
+                                      bottom:
+                                          section == _sections.last ? 0 : 16,
+                                    ),
+                                    child: _TermsSection(section: section),
+                                  ),
+                                )
+                                .toList(growable: false),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -55,6 +65,7 @@ class _TermsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final horizontalPadding = context.pageHorizontalPadding;
     return Container(
       height: 64,
       color: Colors.white,
@@ -62,7 +73,7 @@ class _TermsHeader extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           Positioned(
-            left: 24,
+            left: horizontalPadding,
             child: InkWell(
               onTap: () => context.pop(),
               borderRadius: BorderRadius.circular(999),

@@ -6,6 +6,7 @@ import '../../../../app/router/route_names.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/responsive/responsive_extension.dart';
 import '../../../../core/widgets/app_screen.dart';
 import '../../../../core/widgets/phone_viewport.dart';
 import '../viewmodels/upcoming_payments_view_model.dart';
@@ -30,7 +31,7 @@ class UpcomingPaymentsScreen extends StatelessWidget {
                 onRefresh: viewModel.load,
                 child: ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+                  padding: context.pagePadding(top: 16, bottom: 32),
                   children: [
                     Row(
                       children: [
@@ -60,10 +61,10 @@ class UpcomingPaymentsScreen extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 32),
+                        SizedBox(width: context.isCompact ? 24 : 32),
                       ],
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: context.mediumSectionGap + 2),
                     if (viewModel.isLoading)
                       const Padding(
                         padding: EdgeInsets.only(bottom: 16),

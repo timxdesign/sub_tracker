@@ -97,7 +97,7 @@ enum SubscriptionCategory {
   vehicle,
   insurance,
   identity,
-  other;
+  others;
 
   String get label {
     switch (this) {
@@ -115,7 +115,7 @@ enum SubscriptionCategory {
         return 'Insurance';
       case SubscriptionCategory.identity:
         return 'Identity';
-      case SubscriptionCategory.other:
+      case SubscriptionCategory.others:
         return 'Other';
     }
   }
@@ -136,7 +136,7 @@ enum SubscriptionCategory {
         return 'insurance';
       case SubscriptionCategory.identity:
         return 'identity';
-      case SubscriptionCategory.other:
+      case SubscriptionCategory.others:
         return 'other';
     }
   }
@@ -173,7 +173,7 @@ enum SubscriptionCategory {
       case 'id':
         return SubscriptionCategory.identity;
       default:
-        return SubscriptionCategory.other;
+        return SubscriptionCategory.others;
     }
   }
 

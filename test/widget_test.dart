@@ -5,6 +5,7 @@ import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sub_tracker/app/app.dart';
 import 'package:sub_tracker/app/di/providers.dart';
+import 'package:sub_tracker/core/database/app_database.dart';
 import 'package:sub_tracker/features/profile/domain/models/profile.dart';
 import 'package:sub_tracker/features/profile/domain/repositories/profile_repository.dart';
 import 'package:sub_tracker/features/profile/domain/usecases/get_stored_profile.dart';
@@ -20,9 +21,10 @@ void main() {
 
   testWidgets('shows get started flow after the splash screen', (tester) async {
     final preferences = await SharedPreferences.getInstance();
-    final dependencies = buildAppDependencies(
+    final dependencies = await buildAppDependencies(
       preferences: preferences,
       httpClient: MockClient((request) async => http.Response('', 200)),
+      appDatabase: AppDatabase.inMemory(),
     );
 
     await tester.pumpWidget(SubTrackerApp(dependencies: dependencies));

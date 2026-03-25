@@ -1,50 +1,99 @@
-import '../../../../core/constants/storage_keys.dart';
-import '../../../../core/storage/json_preferences_store.dart';
+import '../../../../core/database/app_database.dart';
 import '../dto/profile_dto.dart';
 
 class ProfileLocalDataSource {
-  const ProfileLocalDataSource(this._store);
+  const ProfileLocalDataSource(this._database);
 
-  final JsonPreferencesStore _store;
+  static const _storedProfileSlot = 'stored';
+  static const _pendingProfileSlot = 'pending';
+
+  final AppDatabase _database;
 
   Future<ProfileDto?> getStoredProfile() async {
-    return _readProfile(StorageKeys.storedProfile);
+    return _readProfile(_storedProfileSlot);
   }
 
   Future<ProfileDto?> getPendingProfile() async {
-    return _readProfile(StorageKeys.pendingProfileSubmission);
+    return _readProfile(_pendingProfileSlot);
   }
 
   Future<void> saveStoredProfile(ProfileDto profile) {
-    return _store.writeMap(StorageKeys.storedProfile, profile.toJson());
+    return _saveProfile(_storedProfileSlot, profile);
   }
 
   Future<void> savePendingProfile(ProfileDto profile) {
-    return _store.writeMap(
-      StorageKeys.pendingProfileSubmission,
-      profile.toJson(),
-    );
+    return _saveProfile(_pendingProfileSlot, profile);
   }
 
   Future<void> clearPendingProfile() {
-    return _store.remove(StorageKeys.pendingProfileSubmission);
+    return _clearProfile(_pendingProfileSlot);
   }
 
   Future<void> clearStoredProfile() {
-    return _store.remove(StorageKeys.storedProfile);
+    return _clearProfile(_storedProfileSlot);
+  }
+
+  Future<void> clearAllProfileData() {
+    return _database.transaction(() async {
+      await _clearProfile(_storedProfileSlot);
+      await _clearProfile(_pendingProfileSlot);
+    });
+  }
+
+  Future<void> replaceProfiles({
+    ProfileDto? storedProfile,
+    ProfileDto? pendingProfile,
+  }) {
+    return _database.transaction(() async {
+      await _clearProfile(_storedProfileSlot);
+      await _clearProfile(_pendingProfileSlot);
+
+      if (storedProfile != null) {
+        await _saveProfile(_storedProfileSlot, storedProfile);
+      }
+
+      if (pendingProfile != null) {
+        await _saveProfile(_pendingProfileSlot, pendingProfile);
+      }
+    });
   }
 
   Future<ProfileDto?> _readProfile(String key) async {
-    final json = _store.readMap(key);
-    if (json == null) {
+    final record = await (_database.select(
+      _database.profileRecords,
+    )..where((profile) => profile.slot.equals(key))).getSingleOrNull();
+    if (record == null) {
       return null;
     }
 
-    final profile = ProfileDto.fromJson(json);
+    final profile = ProfileDto(
+      fullName: record.fullName,
+      email: record.email,
+      createdAt: record.createdAt,
+    );
     if (profile.fullName.isEmpty || profile.email.isEmpty) {
       return null;
     }
 
     return profile;
+  }
+
+  Future<void> _saveProfile(String slot, ProfileDto profile) {
+    return _database
+        .into(_database.profileRecords)
+        .insertOnConflictUpdate(
+          ProfileRecordsCompanion.insert(
+            slot: slot,
+            fullName: profile.fullName,
+            email: profile.email,
+            createdAt: profile.createdAt,
+          ),
+        );
+  }
+
+  Future<void> _clearProfile(String slot) {
+    return (_database.delete(
+      _database.profileRecords,
+    )..where((profile) => profile.slot.equals(slot))).go();
   }
 }
